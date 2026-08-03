@@ -260,7 +260,7 @@ footer {
     text-align: center;
 }
 
-.login-container > p {
+.login-container>p {
     margin-bottom: 25px;
     text-align: center;
 }
@@ -321,6 +321,97 @@ footer {
    10. REGISTER PAGE
    Add register-page-specific styles here.
    ==================================== */
+.register-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 78px);
+    padding: 12px 20px;
+    background: #f8f9fc;
+}
+
+.register-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px 28px;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.register-container h2 {
+    margin-bottom: 5px;
+    color: #1e2a78;
+    text-align: center;
+    font-size: 28px;
+}
+
+.register-container>p {
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.register-container form {
+    display: flex;
+    flex-direction: column;
+}
+
+.register-container label {
+    margin-bottom: 3px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.register-container input,
+.register-container select {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 9px 11px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+}
+
+.register-container input:focus,
+.register-container select:focus {
+    border-color: #4b6cb7;
+    box-shadow: 0 0 0 3px rgba(75, 108, 183, 0.18);
+}
+
+.register-container button {
+    margin-top: 3px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border: none;
+}
+
+.register-links {
+    margin-top: 8px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.register-links a,
+.register-container .back-home {
+    color: #1e2a78;
+    font-weight: 600;
+}
+
+.register-links a:hover,
+.register-links a:focus-visible,
+.register-container .back-home:hover,
+.register-container .back-home:focus-visible {
+    color: #4b6cb7;
+    text-decoration: underline;
+}
+
+.register-container .back-home {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    text-align: center;
+}
 
 /* ====================================
    11. DASHBOARD
@@ -368,9 +459,16 @@ footer {
     .login-container {
         padding: 30px 25px;
     }
+
+    .register-container {
+        padding: 30px 25px;
+    }
+
+
 }
 
 @media (max-width: 480px) {
+
     .navbar,
     .about,
     .features,
