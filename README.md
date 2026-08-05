@@ -12,11 +12,19 @@ The Sprint 1 focus is to develop the frontend prototype and establish the basic 
 
 Team Members
 
-Team Member| Responsibility
-Laith| README documentation, images and project branding
-Rijan| Register page
-Nick| Dashboard page
-Rylan| JavaScript functionality and validation
+Team Member | Responsibility
+
+Laith | README documentation, images and project branding
+
+Rijan | Register page
+
+Nick | Dashboard page
+
+Rylan | JavaScript functionality and validation
+
+Santosh | Project setup, frontend foundation, Home page, Login page and shared stylesheet
+
+
 
 ---
 
