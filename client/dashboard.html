@@ -2,127 +2,524 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard | FedEscape</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Student Dashboard | FedEscape</title>
 
     <link rel="stylesheet" href="css/style.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet">
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
 </head>
 
-<body>
+<body class="dashboard-page">
 
-<header>
-    <nav class="navbar">
+    <header class="dashboard-header">
 
-        <div class="logo">
-            <h1>FedEscape</h1>
-        </div>
+        <nav class="navbar dashboard-navbar">
 
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="index.html#about">About</a></li>
-            <li><a href="index.html#features">Features</a></li>
-        </ul>
+            <a href="dashboard.html" class="dashboard-logo">
+                FedEscape
+            </a>
 
-    </nav>
-</header>
+            <ul class="nav-links dashboard-nav-links">
 
-<main>
+                <li>
+                    <a
+                        href="dashboard.html"
+                        class="active-nav-link"
+                    >
+                        Dashboard
+                    </a>
+                </li>
 
-    <section class="hero">
+                <li>
+                    <a href="#available-rooms">
+                        Rooms
+                    </a>
+                </li>
 
-        <div class="hero-content">
+                <li>
+                    <a href="index.html">
+                        Logout
+                    </a>
+                </li>
 
-            <h2>Student Dashboard</h2>
+            </ul>
 
-            <p>
-                Welcome to FedEscape.
-                <br>
-                Select an educational escape room or view your progress.
-            </p>
+        </nav>
 
-        </div>
+    </header>
 
-    </section>
+    <main class="dashboard-main">
 
-    <section class="features">
+        <!-- Welcome section -->
 
-        <div class="feature-container">
+        <section class="dashboard-welcome">
 
-            <a href="dashboard.html">
+            <div class="dashboard-welcome-content">
 
-                <div class="feature-card">
+                <p class="dashboard-eyebrow">
+                    Student Learning Portal
+                </p>
 
-                    <h3>My Escape Rooms</h3>
+                <h1>Welcome Back!</h1>
 
-                    <p>
-                        View escape rooms you have completed and continue unfinished missions.
+                <p>
+                    Choose an educational escape room to begin learning.
+                    Your mission progress will be saved while you play.
+                </p>
+
+                <a
+                    href="#available-rooms"
+                    class="primary-btn dashboard-hero-button"
+                >
+                    Explore Rooms
+                </a>
+
+            </div>
+
+        </section>
+
+        <!-- Learning path -->
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-label">
+                        Your Journey
                     </p>
+
+                    <h2>Current Learning Path</h2>
+                </div>
+
+                <span class="section-status">
+                    1 Room Available
+                </span>
+
+            </div>
+
+            <div class="learning-path">
+
+                <div class="learning-path-item active-path-item">
+
+                    <span class="path-indicator">
+                        1
+                    </span>
+
+                    <div>
+                        <h3>Cyber Security</h3>
+                        <p>Available now</p>
+                    </div>
 
                 </div>
 
-            </a>
+                <div class="learning-path-line"></div>
 
-            <a href="rooms/cyber-security/intro.html">
+                <div class="learning-path-item">
 
-                <div class="feature-card">
+                    <span class="path-indicator">
+                        2
+                    </span>
 
-                    <h3>Cyber Security Room</h3>
-
-                    <p>
-                        Complete your first cybersecurity escape room and stop the attack.
-                    </p>
-
-                </div>
-
-            </a>
-
-            <a href="dashboard.html">
-
-                <div class="feature-card">
-
-                    <h3>Progress</h3>
-
-                    <p>
-                        Track completed rooms, scores and achievements.
-                    </p>
+                    <div>
+                        <h3>Networking</h3>
+                        <p>Coming next sprint</p>
+                    </div>
 
                 </div>
 
-            </a>
+                <div class="learning-path-line"></div>
 
-            <a href="dashboard.html">
+                <div class="learning-path-item">
 
-                <div class="feature-card">
+                    <span class="path-indicator">
+                        3
+                    </span>
 
-                    <h3>Leaderboard</h3>
-
-                    <p>
-                        Compare your score with other students.
-                    </p>
+                    <div>
+                        <h3>Cloud Security</h3>
+                        <p>Coming next sprint</p>
+                    </div>
 
                 </div>
 
-            </a>
+                <div class="learning-path-line"></div>
 
-        </div>
+                <div class="learning-path-item">
 
-    </section>
+                    <span class="path-indicator">
+                        4
+                    </span>
 
-</main>
+                    <div>
+                        <h3>Secure Coding</h3>
+                        <p>Coming next sprint</p>
+                    </div>
 
-<footer>
+                </div>
 
-    <p>&copy; 2026 FedEscape</p>
+            </div>
 
-    <p>Educational Escape Room | Federation University</p>
+        </section>
 
-</footer>
+        <!-- Available room -->
+
+        <section
+            id="available-rooms"
+            class="dashboard-section"
+        >
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-label">
+                        Ready to Play
+                    </p>
+
+                    <h2>Available Room</h2>
+                </div>
+
+            </div>
+
+            <article class="featured-room-card">
+
+                <div class="featured-room-content">
+
+                    <div class="room-icon" aria-hidden="true">
+                        🛡️
+                    </div>
+
+                    <div class="room-title-row">
+
+                        <div>
+                            <span class="room-status available-status">
+                                Available
+                            </span>
+
+                            <h2>Cyber Security</h2>
+                        </div>
+
+                        <span class="room-level-badge">
+                            Beginner
+                        </span>
+
+                    </div>
+
+                    <p class="room-description">
+                        The university server has been compromised.
+                        Identify security threats, protect passwords and
+                        recover administrator access before the system is
+                        encrypted.
+                    </p>
+
+                    <div class="room-information">
+
+                        <div class="room-information-item">
+
+                            <span class="room-information-label">
+                                Difficulty
+                            </span>
+
+                            <strong>
+                                Beginner
+                            </strong>
+
+                        </div>
+
+                        <div class="room-information-item">
+
+                            <span class="room-information-label">
+                                Time Limit
+                            </span>
+
+                            <strong>
+                                15 Minutes
+                            </strong>
+
+                        </div>
+
+                        <div class="room-information-item">
+
+                            <span class="room-information-label">
+                                Puzzles
+                            </span>
+
+                            <strong>
+                                3 Challenges
+                            </strong>
+
+                        </div>
+
+                        <div class="room-information-item">
+
+                            <span class="room-information-label">
+                                Subject
+                            </span>
+
+                            <strong>
+                                Cyber Security
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    <div class="room-learning-objectives">
+
+                        <h3>Learning objectives</h3>
+
+                        <ul>
+                            <li>
+                                Recognise secure web communication protocols.
+                            </li>
+
+                            <li>
+                                Identify the characteristics of strong passwords.
+                            </li>
+
+                            <li>
+                                Use logical thinking to decode a simple cipher.
+                            </li>
+                        </ul>
+
+                    </div>
+
+                    <a
+                        href="rooms/cyber-security/intro.html"
+                        class="primary-btn room-start-button"
+                    >
+                        Start Mission
+                    </a>
+
+                </div>
+
+                <div class="featured-room-panel">
+
+                    <p class="mission-panel-label">
+                        Mission Status
+                    </p>
+
+                    <div class="mission-status-graphic">
+                        <span aria-hidden="true">
+                            🔐
+                        </span>
+                    </div>
+
+                    <h3>Security Breach Detected</h3>
+
+                    <p>
+                        The system is waiting for a student agent to begin
+                        the recovery mission.
+                    </p>
+
+                    <div class="mission-panel-detail">
+                        <span>Room Code</span>
+                        <strong>CYBER-01</strong>
+                    </div>
+
+                </div>
+
+            </article>
+
+        </section>
+
+        <!-- Upcoming rooms -->
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-label">
+                        Platform Roadmap
+                    </p>
+
+                    <h2>Upcoming Rooms</h2>
+                </div>
+
+                <span class="section-status">
+                    Coming in Next Sprint
+                </span>
+
+            </div>
+
+            <div class="upcoming-room-grid">
+
+                <article class="upcoming-room-card">
+
+                    <div class="upcoming-room-icon" aria-hidden="true">
+                        🌐
+                    </div>
+
+                    <span class="coming-soon-badge">
+                        Coming in Next Sprint
+                    </span>
+
+                    <h3>Networking</h3>
+
+                    <p>
+                        Explore network devices, secure connections,
+                        IP addressing and infrastructure protection.
+                    </p>
+
+                    <div class="upcoming-room-meta">
+                        <span>Beginner</span>
+                        <span>Locked</span>
+                    </div>
+
+                </article>
+
+                <article class="upcoming-room-card">
+
+                    <div class="upcoming-room-icon" aria-hidden="true">
+                        ☁️
+                    </div>
+
+                    <span class="coming-soon-badge">
+                        Coming in Next Sprint
+                    </span>
+
+                    <h3>Cloud Security</h3>
+
+                    <p>
+                        Learn how to protect cloud identities,
+                        storage services and shared resources.
+                    </p>
+
+                    <div class="upcoming-room-meta">
+                        <span>Intermediate</span>
+                        <span>Locked</span>
+                    </div>
+
+                </article>
+
+                <article class="upcoming-room-card">
+
+                    <div class="upcoming-room-icon" aria-hidden="true">
+                        💻
+                    </div>
+
+                    <span class="coming-soon-badge">
+                        Coming in Next Sprint
+                    </span>
+
+                    <h3>Secure Coding</h3>
+
+                    <p>
+                        Discover secure development practices,
+                        input validation and common web risks.
+                    </p>
+
+                    <div class="upcoming-room-meta">
+                        <span>Advanced</span>
+                        <span>Locked</span>
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+        <!-- Student features -->
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-label">
+                        Student Tools
+                    </p>
+
+                    <h2>Student Features</h2>
+                </div>
+
+            </div>
+
+            <div class="student-feature-grid">
+
+                <article class="student-feature-card">
+
+                    <div class="student-feature-icon" aria-hidden="true">
+                        🏆
+                    </div>
+
+                    <div>
+
+                        <span class="coming-soon-badge">
+                            Coming in Next Sprint
+                        </span>
+
+                        <h3>Leaderboard</h3>
+
+                        <p>
+                            Compare your mission scores and completion
+                            times with other students.
+                        </p>
+
+                    </div>
+
+                </article>
+
+                <article class="student-feature-card">
+
+                    <div class="student-feature-icon" aria-hidden="true">
+                        📈
+                    </div>
+
+                    <div>
+
+                        <span class="coming-soon-badge">
+                            Coming in Next Sprint
+                        </span>
+
+                        <h3>Progress Tracking</h3>
+
+                        <p>
+                            Track completed rooms, scores,
+                            achievements and learning progress.
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="dashboard-footer">
+
+        <p>
+            &copy; 2026 FedEscape
+        </p>
+
+        <p>
+            Educational Escape Room Platform |
+            Federation University Australia
+        </p>
+
+    </footer>
 
 </body>
 </html>

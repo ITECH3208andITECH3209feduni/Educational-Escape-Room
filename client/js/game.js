@@ -1,94 +1,87 @@
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const startMissionButton =
-        document.getElementById("startMissionButton");
+
+    const startMissionButton = document.getElementById("startMissionButton");
 
     if (startMissionButton) {
         startMissionButton.addEventListener("click", () => {
+
             startNewMission("cyber-security");
+
             window.location.href = "room.html";
         });
     }
 
-    const puzzleForm = document.getElementById("puzzleForm");
-
-    if (puzzleForm) {
+    if (document.getElementById("puzzleForm")) {
         initialiseRoom();
     }
+
 });
 
 function startNewMission(roomId) {
+
     const room = rooms[roomId];
 
-    if (!room) {
-        console.error(`Room not found: ${roomId}`);
-        return;
-    }
-
     localStorage.setItem("fedEscapeRoomId", roomId);
-    localStorage.setItem("fedEscapeCurrentPuzzle", "0");
-    localStorage.setItem("fedEscapeScore", "0");
-    localStorage.setItem("fedEscapeCorrectAnswers", "0");
-    localStorage.setItem(
-        "fedEscapeTimeRemaining",
-        room.timeLimit.toString()
-    );
-    localStorage.setItem("fedEscapeCompleted", "false");
-    localStorage.setItem(
-        "fedEscapeStartedAt",
-        Date.now().toString()
-    );
+    localStorage.setItem("fedEscapeCurrentPuzzle", 0);
+    localStorage.setItem("fedEscapeScore", 0);
+    localStorage.setItem("fedEscapeCorrectAnswers", 0);
+    localStorage.setItem("fedEscapeTimeRemaining", room.timeLimit);
+    localStorage.setItem("fedEscapeCompleted", false);
+
 }
 
 function initialiseRoom() {
-    const roomId =
-        localStorage.getItem("fedEscapeRoomId") ||
-        "cyber-security";
+
+    const roomId = localStorage.getItem("fedEscapeRoomId");
 
     const room = rooms[roomId];
 
-    if (!room) {
-        showGameError("The selected room could not be found.");
-        return;
-    }
+    renderPuzzle(room);
 
-    renderCurrentPuzzle(room);
     startGameTimer(room.timeLimit);
 
-    const puzzleForm =
-        document.getElementById("puzzleForm");
+    document
+        .getElementById("puzzleForm")
+        .addEventListener("submit", (event) => {
 
-    puzzleForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        submitAnswer(room);
-    });
+            event.preventDefault();
 
-    const restartButton =
-        document.getElementById("restartMissionButton");
+            submitAnswer(room);
 
-    if (restartButton) {
-        restartButton.addEventListener("click", () => {
-            startNewMission(room.id);
-            window.location.reload();
         });
-    }
+
+    document
+        .getElementById("restartMissionButton")
+        .addEventListener("click", () => {
+
+            startNewMission(room.id);
+
+            location.reload();
+
+        });
+
 }
 
-function renderCurrentPuzzle(room) {
-    const currentPuzzleIndex = Number(
-        localStorage.getItem("fedEscapeCurrentPuzzle") || "0"
+function renderPuzzle(room) {
+
+    const currentPuzzle = Number(
+        localStorage.getItem("fedEscapeCurrentPuzzle")
     );
 
-    if (currentPuzzleIndex >= room.puzzles.length) {
-        showCompletionScreen(room);
+    if (currentPuzzle >= room.puzzles.length) {
+
+        showCompletion(room);
+
         return;
+
     }
 
-    const puzzle = room.puzzles[currentPuzzleIndex];
+    const puzzle = room.puzzles[currentPuzzle];
 
     document.getElementById("puzzleProgress").textContent =
-        `Puzzle ${currentPuzzleIndex + 1} of ${room.puzzles.length}`;
+        `Puzzle ${currentPuzzle + 1} of ${room.puzzles.length}`;
 
     document.getElementById("puzzleCategory").textContent =
         puzzle.category;
@@ -99,134 +92,139 @@ function renderCurrentPuzzle(room) {
     document.getElementById("puzzleQuestion").textContent =
         puzzle.question;
 
-    const progressPercentage =
-        ((currentPuzzleIndex + 1) / room.puzzles.length) * 100;
+    document.getElementById("currentScore").textContent =
+        localStorage.getItem("fedEscapeScore");
+
+    const progress =
+        Math.round(
+            ((currentPuzzle + 1) / room.puzzles.length) * 100
+        );
 
     document.getElementById("progressFill").style.width =
-        `${progressPercentage}%`;
+        progress + "%";
+
+    document.getElementById("progressText").textContent =
+        progress + "% Complete";
 
     const answerOptions =
         document.getElementById("answerOptions");
 
     answerOptions.innerHTML = "";
 
-    puzzle.options.forEach((option) => {
-        const label = document.createElement("label");
-        label.className = "answer-option";
+    puzzle.options.forEach(option => {
 
-        const input = document.createElement("input");
-        input.type = "radio";
-        input.name = "answer";
-        input.value = option;
+        answerOptions.innerHTML += `
+            <label class="answer-option">
 
-        const text = document.createElement("span");
-        text.textContent = option;
+                <input
+                    type="radio"
+                    name="answer"
+                    value="${option}">
 
-        label.append(input, text);
-        answerOptions.appendChild(label);
+                ${option}
+
+            </label>
+        `;
+
     });
 
     document.getElementById("puzzleMessage").textContent = "";
+
 }
 
 function submitAnswer(room) {
-    const selectedAnswer = document.querySelector(
-        'input[name="answer"]:checked'
-    );
 
-    const puzzleMessage =
+    const selected =
+        document.querySelector('input[name="answer"]:checked');
+
+    const message =
         document.getElementById("puzzleMessage");
 
-    if (!selectedAnswer) {
-        puzzleMessage.textContent =
-            "Please select an answer.";
+    if (!selected) {
+
+        message.textContent = "Please choose an answer.";
+
         return;
+
     }
 
-    const currentPuzzleIndex = Number(
-        localStorage.getItem("fedEscapeCurrentPuzzle") || "0"
+    const puzzleIndex = Number(
+        localStorage.getItem("fedEscapeCurrentPuzzle")
     );
 
-    const puzzle = room.puzzles[currentPuzzleIndex];
+    const puzzle =
+        room.puzzles[puzzleIndex];
 
-    if (selectedAnswer.value !== puzzle.correctAnswer) {
-        puzzleMessage.textContent =
-            "Incorrect. Try again.";
+    if (selected.value !== puzzle.correctAnswer) {
+
+        message.style.color = "#ff5a5a";
+
+        message.textContent =
+            "❌ Incorrect. Please try again.";
+
         return;
+
     }
 
-    const currentScore = Number(
-        localStorage.getItem("fedEscapeScore") || "0"
-    );
+    message.style.color = "#4CAF50";
 
-    const correctAnswers = Number(
-        localStorage.getItem(
-            "fedEscapeCorrectAnswers"
-        ) || "0"
-    );
+    message.textContent =
+        "✅ Correct! " + puzzle.explanation;
+
+    const score =
+        Number(localStorage.getItem("fedEscapeScore"));
+
+    const correct =
+        Number(localStorage.getItem("fedEscapeCorrectAnswers"));
 
     localStorage.setItem(
         "fedEscapeScore",
-        (currentScore + puzzle.points).toString()
+        score + puzzle.points
     );
 
     localStorage.setItem(
         "fedEscapeCorrectAnswers",
-        (correctAnswers + 1).toString()
+        correct + 1
     );
 
     localStorage.setItem(
         "fedEscapeCurrentPuzzle",
-        (currentPuzzleIndex + 1).toString()
+        puzzleIndex + 1
     );
 
-    puzzleMessage.textContent =
-        `Correct! ${puzzle.explanation}`;
+    document.getElementById("currentScore").textContent =
+        score + puzzle.points;
 
     setTimeout(() => {
-        renderCurrentPuzzle(room);
+
+        renderPuzzle(room);
+
     }, 1200);
+
 }
 
-function showCompletionScreen(room) {
+function showCompletion(room) {
+
     stopGameTimer();
 
-    localStorage.setItem("fedEscapeCompleted", "true");
-
-    document.getElementById("puzzleForm").hidden = true;
     document.getElementById("puzzleCategory").hidden = true;
     document.getElementById("puzzleTitle").hidden = true;
     document.getElementById("puzzleQuestion").hidden = true;
-    document.getElementById("puzzleProgress").textContent =
-        "Mission Complete";
+    document.getElementById("puzzleForm").hidden = true;
 
-    const completionScreen =
-        document.getElementById("completionScreen");
-
-    completionScreen.hidden = false;
+    document.getElementById("completionScreen").hidden = false;
 
     document.getElementById("finalScore").textContent =
-        localStorage.getItem("fedEscapeScore") || "0";
+        localStorage.getItem("fedEscapeScore");
 
     document.getElementById("finalCorrectAnswers").textContent =
-        `${localStorage.getItem("fedEscapeCorrectAnswers") || "0"}` +
-        `/${room.puzzles.length}`;
+        localStorage.getItem("fedEscapeCorrectAnswers")
+        + " / "
+        + room.puzzles.length;
 
     document.getElementById("finalTime").textContent =
         formatGameTime(
-            Number(
-                localStorage.getItem(
-                    "fedEscapeTimeRemaining"
-                ) || "0"
-            )
+            Number(localStorage.getItem("fedEscapeTimeRemaining"))
         );
-}
 
-function showGameError(message) {
-    const puzzleMessage =
-        document.getElementById("puzzleMessage");
-
-    if (puzzleMessage) {
-        puzzleMessage.textContent = message;
-    }
 }

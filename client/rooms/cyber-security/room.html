@@ -1,119 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Cybersecurity Room | FedEscape</title>
+    <title>Cyber Security Escape Room | FedEscape</title>
 
     <link rel="stylesheet" href="../../css/style.css">
 </head>
 
 <body>
 
-<header>
-    <nav class="navbar">
-        <div class="logo">
-            <h1>FedEscape</h1>
-        </div>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <h1>FedEscape</h1>
+            </div>
 
-        <ul class="nav-links">
-            <li>
-                <a href="../../dashboard.html">Exit Room</a>
-            </li>
-        </ul>
-    </nav>
-</header>
+            <ul class="nav-links">
+                <li>
+                    <a href="../../dashboard.html">Dashboard</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
 
-<main class="game-page">
+    <main class="game-page">
 
-    <section class="mission-card puzzle-card">
+        <section class="mission-card">
 
-        <div class="puzzle-header">
-            <span id="puzzleProgress">Puzzle 1 of 3</span>
-            <span id="gameTimer">15:00</span>
-        </div>
+            <!-- ===============================
+                 GAME HUD
+            ================================ -->
 
-        <div class="progress-track">
-            <div id="progressFill" class="progress-fill"></div>
-        </div>
+            <div class="game-hud">
 
-        <p id="puzzleCategory" class="mission-label">
-            Loading category...
-        </p>
-
-        <h2 id="puzzleTitle">
-            Loading puzzle...
-        </h2>
-
-        <p id="puzzleQuestion" class="mission-description">
-            Please wait while the puzzle loads.
-        </p>
-
-        <form id="puzzleForm" class="puzzle-form">
-
-            <div id="answerOptions"></div>
-
-            <p
-                id="puzzleMessage"
-                class="puzzle-message"
-                aria-live="polite"
-            ></p>
-
-            <button type="submit" class="primary-btn">
-                Submit Answer
-            </button>
-
-        </form>
-
-        <div id="completionScreen" hidden>
-            <p class="mission-label">Mission Complete</p>
-
-            <h2>Access Restored</h2>
-
-            <p class="mission-description">
-                You stopped the cyberattack and recovered administrator access.
-            </p>
-
-            <div class="mission-details">
-
-                <div class="mission-detail">
-                    <strong id="finalScore">0</strong>
-                    <span>Score</span>
+                <div class="hud-item">
+                    📘
+                    <span id="puzzleProgress">
+                        Puzzle 1 of 3
+                    </span>
                 </div>
 
-                <div class="mission-detail">
-                    <strong id="finalCorrectAnswers">0/3</strong>
-                    <span>Correct</span>
+                <div class="hud-item">
+                    ⭐ Score:
+                    <span id="currentScore">
+                        0
+                    </span>
                 </div>
 
-                <div class="mission-detail">
-                    <strong id="finalTime">00:00</strong>
-                    <span>Time Left</span>
+                <div class="hud-item">
+                    ⏱
+                    <span id="gameTimer">
+                        15:00
+                    </span>
                 </div>
 
             </div>
 
-            <button
-                id="restartMissionButton"
-                type="button"
-                class="primary-btn"
-            >
-                Restart Mission
-            </button>
+            <div class="progress-track">
+                <div id="progressFill"
+                     class="progress-fill">
+                </div>
+            </div>
 
-            <a href="../../dashboard.html" class="primary-btn">
-                Return to Dashboard
-            </a>
-        </div>
+            <p id="progressText"
+               class="progress-text">
+                33% Complete
+            </p>
 
-    </section>
+            <!-- ===============================
+                 PUZZLE CONTENT
+            ================================ -->
 
-</main>
+            <p id="puzzleCategory"
+               class="mission-label">
 
-<script src="../../data/rooms.js"></script>
-<script src="../../js/timer.js"></script>
-<script src="../../js/game.js"></script>
+                Loading Category...
+
+            </p>
+
+            <h2 id="puzzleTitle">
+
+                Loading Puzzle...
+
+            </h2>
+
+            <p id="puzzleQuestion"
+               class="mission-description">
+
+                Loading question...
+
+            </p>
+
+            <form id="puzzleForm">
+
+                <div id="answerOptions">
+
+                </div>
+
+                <p id="puzzleMessage"
+                   class="puzzle-message">
+
+                </p>
+
+                <button
+                    type="submit"
+                    class="primary-btn">
+
+                    Submit Answer
+
+                </button>
+
+            </form>
+
+            <!-- ===============================
+                 COMPLETION SCREEN
+            ================================ -->
+
+            <div id="completionScreen" hidden>
+
+                <p class="mission-label">
+
+                    Mission Complete
+
+                </p>
+
+                <h2>
+
+                    🎉 Cyber Attack Prevented
+
+                </h2>
+
+                <p class="mission-description">
+
+                    Congratulations!
+
+                    You successfully defended the university server
+                    and recovered administrator access before the
+                    attackers encrypted the system.
+
+                </p>
+
+                <div class="mission-details">
+
+                    <div class="mission-detail">
+
+                        <strong id="finalScore">
+
+                            300
+
+                        </strong>
+
+                        <span>
+
+                            Final Score
+
+                        </span>
+
+                    </div>
+
+                    <div class="mission-detail">
+
+                        <strong id="finalCorrectAnswers">
+
+                            3 / 3
+
+                        </strong>
+
+                        <span>
+
+                            Correct Answers
+
+                        </span>
+
+                    </div>
+
+                    <div class="mission-detail">
+
+                        <strong id="finalTime">
+
+                            15:00
+
+                        </strong>
+
+                        <span>
+
+                            Time Remaining
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div
+                    style="
+                        display:flex;
+                        justify-content:center;
+                        gap:20px;
+                        flex-wrap:wrap;
+                        margin-top:40px;
+                    ">
+
+                    <button
+                        id="restartMissionButton"
+                        type="button"
+                        class="primary-btn">
+
+                        Restart Mission
+
+                    </button>
+
+                    <a href="../../dashboard.html"
+                       class="primary-btn">
+
+                        Return to Dashboard
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="../../data/rooms.js"></script>
+
+    <script src="../../js/timer.js"></script>
+
+    <script src="../../js/game.js"></script>
 
 </body>
+
 </html>

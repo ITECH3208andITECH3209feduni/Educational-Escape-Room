@@ -2,145 +2,290 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Register | FedEscape</title>
 
-    <!-- CSS File -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet"
+          href="css/style.css">
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+          rel="stylesheet">
+
 </head>
 
-<body>
+<body class="auth-shell">
 
-    <!-- ================= NAVIGATION ================= -->
+<main class="auth-layout">
 
-    <header>
+    <!-- Left Panel -->
 
-        <nav class="navbar">
+    <section class="auth-brand-panel">
 
-            <div class="logo">
-                <h1>FedEscape</h1>
+        <a href="index.html" class="auth-brand-logo">
+            FedEscape
+        </a>
+
+        <div class="auth-brand-content">
+
+            <p class="auth-kicker">
+                Educational Escape Room Platform
+            </p>
+
+            <h1>
+                Create your learning journey.
+            </h1>
+
+            <p class="auth-brand-description">
+                Register your account to begin solving educational escape rooms,
+                complete missions and build practical IT skills.
+            </p>
+
+            <div class="auth-benefit-list">
+
+                <div class="auth-benefit-item">
+
+                    <span>🎓</span>
+
+                    <div>
+
+                        <h2>Learn by Doing</h2>
+
+                        <p>
+                            Solve real educational challenges instead of
+                            traditional quizzes.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="auth-benefit-item">
+
+                    <span>🧩</span>
+
+                    <div>
+
+                        <h2>Interactive Missions</h2>
+
+                        <p>
+                            Complete escape rooms while learning
+                            Cyber Security, Networking and Cloud.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="auth-benefit-item">
+
+                    <span>🏆</span>
+
+                    <div>
+
+                        <h2>Earn Achievements</h2>
+
+                        <p>
+                            Future releases will include badges,
+                            progress tracking and leaderboards.
+                        </p>
+
+                    </div>
+
+                </div>
+
             </div>
 
-            <ul class="nav-links">
+        </div>
 
-                <li>
-                    <a href="index.html">Home</a>
-                </li>
+        <p class="auth-brand-footer">
+            Federation University Australia
+        </p>
 
-                <li>
-                    <a href="login.html">Login</a>
-                </li>
+    </section>
 
-            </ul>
+    <!-- Right Panel -->
 
-        </nav>
+    <section class="auth-form-panel">
 
-    </header>
+        <div class="auth-form-wrapper">
 
+            <a href="index.html"
+               class="auth-back-link">
 
+                ← Back to Home
 
-    <!-- ================= REGISTER PAGE ================= -->
+            </a>
 
-    <main>
+            <div class="auth-form-heading">
 
-        <section class="register-section">
-
-            <div class="register-container">
-
-                <h2>Create an Account</h2>
-
-                <p>
-                    Register as a teacher or student to join FedEscape.
+                <p class="auth-form-kicker">
+                    Student Registration
                 </p>
 
-                <form id="registerForm">
+                <h2>
+                    Join FedEscape
+                </h2>
 
-                    <label for="fullName">
+                <p>
+                    Create your student account to begin your first educational
+                    escape room.
+                </p>
+
+            </div>
+
+            <form
+                id="registerForm"
+                class="modern-auth-form">
+
+                <div class="auth-field">
+
+                    <label for="registerName">
+
                         Full Name
+
                     </label>
 
-                    <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
-
-                    <label for="email">
-                        Email
-                    </label>
-
-                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
-
-                    <label for="password">
-                        Password
-                    </label>
-
-                    <input type="password" id="password" name="password" placeholder="Enter your password" minlength="6"
+                    <input
+                        type="text"
+                        id="registerName"
+                        placeholder="Enter your full name"
                         required>
 
-                    <label for="confirmPassword">
+                </div>
+
+                <div class="auth-field">
+
+                    <label for="registerEmail">
+
+                        Email Address
+
+                    </label>
+
+                    <input
+                        type="email"
+                        id="registerEmail"
+                        placeholder="student@example.com"
+                        required>
+
+                </div>
+
+                <div class="auth-field">
+
+                    <label for="registerPassword">
+
+                        Password
+
+                    </label>
+
+                    <input
+                        type="password"
+                        id="registerPassword"
+                        minlength="6"
+                        placeholder="Create a password"
+                        required>
+
+                </div>
+
+                <div class="auth-field">
+
+                    <label for="registerConfirmPassword">
+
                         Confirm Password
+
                     </label>
 
-                    <input type="password" id="confirmPassword" name="confirmPassword"
-                        placeholder="Confirm your password" minlength="6" required>
+                    <input
+                        type="password"
+                        id="registerConfirmPassword"
+                        minlength="6"
+                        placeholder="Confirm your password"
+                        required>
 
-                    <label for="userRole">
+                </div>
+
+                <div class="auth-field">
+
+                    <label for="registerRole">
+
                         User Role
+
                     </label>
 
-                    <select id="userRole" name="userRole" required>
+                    <select
+                        id="registerRole"
+                        required>
 
-                        <option value="" disabled selected>
+                        <option value="">
                             Select your role
-                        </option>
-
-                        <option value="teacher">
-                            Teacher
                         </option>
 
                         <option value="student">
                             Student
                         </option>
 
+                        <option value="teacher">
+                            Teacher
+                        </option>
+
                     </select>
 
-                    <button class="btn primary-btn" type="submit">
-                        Register
-                    </button>
+                </div>
 
-                </form>
+                <button
+                    type="submit"
+                    class="primary-btn auth-submit-button">
 
-                <p class="register-links">
+                    Create Account
 
-                    Already have an account?
+                </button>
 
-                    <a href="login.html">
-                        Login Here
-                    </a>
+            </form>
 
+            <div class="auth-demo-note">
+
+                <strong>
+                    Sprint 1 Prototype
+                </strong>
+
+                <p>
+                    Registration is currently simulated. User accounts will be
+                    securely stored in MongoDB once the backend is implemented
+                    in a future sprint.
                 </p>
-
-                <a href="index.html" class="back-home">
-                    ← Back to Home
-                </a>
 
             </div>
 
-        </section>
+            <p class="auth-switch-text">
 
-    </main>
+                Already have an account?
 
+                <a href="login.html">
 
+                    Login here
 
-    <!-- JavaScript -->
+                </a>
 
-    <script src="js/script.js"></script>
+            </p>
+
+        </div>
+
+    </section>
+
+</main>
+
+<script src="js/script.js"></script>
 
 </body>
 
