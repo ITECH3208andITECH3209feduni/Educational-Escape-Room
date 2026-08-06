@@ -492,3 +492,125 @@ footer {
         font-size: 28px;
     }
 }
+/* ==============================
+   ESCAPE ROOM MISSION PAGE
+   ============================== */
+
+.game-page {
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+    background:
+        linear-gradient(
+            rgba(8, 14, 42, 0.9),
+            rgba(21, 31, 85, 0.9)
+        ),
+        url("../images/backgrounds/background3.jpg")
+        center / cover no-repeat;
+}
+
+.mission-card {
+    width: 100%;
+    max-width: 760px;
+    padding: 50px;
+    color: white;
+    text-align: center;
+    background: rgba(7, 13, 40, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+.mission-label {
+    margin-bottom: 10px;
+    color: #ffd166;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.mission-card h2 {
+    margin-bottom: 20px;
+    font-size: 42px;
+}
+
+.mission-warning {
+    display: inline-block;
+    margin-bottom: 25px;
+    padding: 10px 20px;
+    color: #ffb3b3;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(255, 70, 70, 0.14);
+    border: 1px solid #ff6b6b;
+    border-radius: 30px;
+}
+
+.mission-description {
+    max-width: 620px;
+    margin: 0 auto 35px;
+    line-height: 1.7;
+}
+
+.mission-details {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.mission-detail {
+    width: 150px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+}
+
+.mission-detail strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #ffd166;
+    font-size: 27px;
+}
+
+.mission-detail span {
+    font-size: 14px;
+}
+
+.primary-btn {
+    padding: 14px 30px;
+    color: #101634;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #ffd166;
+    border: none;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 650px) {
+    .mission-card {
+        padding: 35px 20px;
+    }
+
+    .mission-card h2 {
+        font-size: 32px;
+    }
+
+    .mission-details {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .mission-detail {
+        width: 100%;
+        max-width: 260px;
+    }
+}

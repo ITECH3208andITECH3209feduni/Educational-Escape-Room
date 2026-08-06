@@ -1,86 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard | FedEscape</title>
-    <link href="css/style.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link 
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" 
-        rel="stylesheet">
-</head>
-<body>
-    <header>
-        <nav class="navbar">
-            <div class="logo">
-                <h1>FedEscape</h1>
-            </div>
-            <ul class="nav-links">
-                <li>
-                    <a href="index.html">Home</a>
-                </li>
-                <li>
-                    <a href="index.html#about">About</a>
-                    <!--# goes to the specified area of the html page (about area of index.html)-->
-                </li>
-                <li>
-                    <a href="index.html#features">Features</a>
-                </li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <section class="hero">
-            <div class="hero-content">
-                <h2>User Dashboard</h2>
-                <!--find a way to have user's first name replace "user". example John's Dashboard-->
-                <p>Welcome to your dashboard.
-                <br>Here you can access different activities and view information related to escaperooms you have participated in
 
-                </p>
-            </div>
-        </section>
-        <section id="features" class="features">
-            <div class="feature-container">
-                <a href="dashboard.html">
-                <!--placeholder link until the pages are created-->
-                    <div class=""feature-card>
-                        <h3>My Escape Rooms</h3>
-                        <p>View escapes rooms you have previously done</p>
-                    </div>
-                </a>
-                <a href="dashboard.html">
-                <!--placeholder link until the pages are created-->
-                    <div class=""feature-card>
-                        <h3>Join Room</h3>
-                        <p>Join an active escape room</p>
-                    </div>
-                </a>
-                <a href="dashboard.html">
-                <!--placeholder link until the pages are created-->
-                    <div class=""feature-card>
-                        <h3>Progress</h3>
-                        <p>View your progress in escape rooms</p>
-                    </div>
-                </a>
-                <a href="dashboard.html">
-                <!--placeholder link until the pages are created-->
-                    <div class=""feature-card>
-                        <h3>Leaderboard</h3>
-                        <p>View student leaderboard</p>
-                    </div>
-                </a>
-            </div>
-        </section>
-    </main>
-    <footer>
-        <p>
-            &copy; 2026 FedEscape
-        </p>
-        <p>
-            Educational Escape Room | Federation University
-        </p>
-    </footer>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+</head>
+
+<body>
+
+<header>
+    <nav class="navbar">
+
+        <div class="logo">
+            <h1>FedEscape</h1>
+        </div>
+
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#about">About</a></li>
+            <li><a href="index.html#features">Features</a></li>
+        </ul>
+
+    </nav>
+</header>
+
+<main>
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <h2>Student Dashboard</h2>
+
+            <p>
+                Welcome to FedEscape.
+                <br>
+                Select an educational escape room or view your progress.
+            </p>
+
+        </div>
+
+    </section>
+
+    <section class="features">
+
+        <div class="feature-container">
+
+            <a href="dashboard.html">
+
+                <div class="feature-card">
+
+                    <h3>My Escape Rooms</h3>
+
+                    <p>
+                        View escape rooms you have completed and continue unfinished missions.
+                    </p>
+
+                </div>
+
+            </a>
+
+            <a href="rooms/cyber-security/intro.html">
+
+                <div class="feature-card">
+
+                    <h3>Cyber Security Room</h3>
+
+                    <p>
+                        Complete your first cybersecurity escape room and stop the attack.
+                    </p>
+
+                </div>
+
+            </a>
+
+            <a href="dashboard.html">
+
+                <div class="feature-card">
+
+                    <h3>Progress</h3>
+
+                    <p>
+                        Track completed rooms, scores and achievements.
+                    </p>
+
+                </div>
+
+            </a>
+
+            <a href="dashboard.html">
+
+                <div class="feature-card">
+
+                    <h3>Leaderboard</h3>
+
+                    <p>
+                        Compare your score with other students.
+                    </p>
+
+                </div>
+
+            </a>
+
+        </div>
+
+    </section>
+
+</main>
+
+<footer>
+
+    <p>&copy; 2026 FedEscape</p>
+
+    <p>Educational Escape Room | Federation University</p>
+
+</footer>
+
 </body>
 </html>
