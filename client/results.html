@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -10,14 +8,109 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
-        Student Results | FedEscape
-    </title>
+    <title>Student Results | FedEscape</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
 
     <link
-        rel="stylesheet"
-        href="css/style.css"
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
     >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        /* Add professional spacing between each results section */
+        .dashboard-section {
+            margin-top: 55px;
+            margin-bottom: 55px;
+        }
+
+        /* Completed Rooms table */
+        .results-table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Add space between table columns */
+        .results-table th,
+        .results-table td {
+            padding: 18px 30px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        /* Make headings easier to read */
+        .results-table th {
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        /* Add separation between result rows */
+        .results-table td {
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        /* More space before Rankings / Leaderboard */
+        .leaderboard-card {
+            margin-top: 25px;
+        }
+
+        /* Leaderboard headings and rows */
+        .leaderboard-heading,
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 100px minmax(180px, 1fr) 150px 150px;
+            column-gap: 35px;
+            align-items: center;
+            padding: 18px 30px;
+        }
+
+        /* Leaderboard heading */
+        .leaderboard-heading {
+            font-weight: 600;
+        }
+
+        /* Separate each leaderboard result */
+        .leaderboard-row {
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        /* Give the leaderboard extra room at the bottom */
+        #leaderboardList {
+            margin-bottom: 10px;
+        }
+
+        /* Mobile/tablet support */
+        @media (max-width: 768px) {
+
+            .results-table th,
+            .results-table td {
+                padding: 14px 18px;
+            }
+
+            .leaderboard-heading,
+            .leaderboard-row {
+                grid-template-columns: 60px minmax(120px, 1fr) 80px 80px;
+                column-gap: 15px;
+                padding: 15px;
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -44,7 +137,11 @@
                     Dashboard
                 </a>
             </li>
-
+           </li> 
+<a href="dashboard.html#available-rooms">
+            Rooms
+        </a>
+    </li>
             <li>
                 <a
                     href="results.html"
