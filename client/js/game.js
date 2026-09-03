@@ -2,15 +2,19 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    const startMissionButton = document.getElementById("startMissionButton");
+    const startMissionButton =
+        document.getElementById("startMissionButton");
 
     if (startMissionButton) {
+
         startMissionButton.addEventListener("click", () => {
 
             startNewMission("cyber-security");
 
             window.location.href = "room.html";
+
         });
+
     }
 
     if (document.getElementById("puzzleForm")) {
@@ -19,58 +23,142 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
+
 function startNewMission(roomId) {
 
     const room = rooms[roomId];
 
+    if (!room) {
+        console.error("Room not found:", roomId);
+        return;
+    }
+
     localStorage.setItem("fedEscapeRoomId", roomId);
-    localStorage.setItem("fedEscapeCurrentPuzzle", 0);
-    localStorage.setItem("fedEscapeScore", 0);
-    localStorage.setItem("fedEscapeCorrectAnswers", 0);
-    localStorage.setItem("fedEscapeTimeRemaining", room.timeLimit);
-    localStorage.setItem("fedEscapeCompleted", false);
+    localStorage.setItem("fedEscapeCurrentPuzzle", "0");
+    localStorage.setItem("fedEscapeScore", "0");
+    localStorage.setItem("fedEscapeCorrectAnswers", "0");
+
+    localStorage.setItem(
+        "fedEscapeTimeRemaining",
+        room.timeLimit.toString()
+    );
+
+    localStorage.setItem("fedEscapeCompleted", "false");
+    localStorage.setItem("fedEscapeResultSaved", "false");
 
 }
 
-function initialiseRoom() {
 
-    const roomId = localStorage.getItem("fedEscapeRoomId");
+/*
+    Try to load the room from the backend.
 
-    const room = rooms[roomId];
+    If the backend room API is not available yet,
+    the game will automatically use rooms.js instead.
+*/
+async function loadRoom(roomId) {
+
+    try {
+
+        const response = await fetch(
+            `http://localhost:5000/api/rooms/${roomId}`
+        );
+
+        if (!response.ok) {
+            throw new Error("Room API not available");
+        }
+
+        const room = await response.json();
+
+        console.log("Room loaded from backend.");
+
+        return room;
+
+    } catch (error) {
+
+        console.warn(
+            "Backend unavailable. Using local room data."
+        );
+
+        return rooms[roomId];
+
+    }
+
+}
+
+
+async function initialiseRoom() {
+
+    const roomId =
+        localStorage.getItem("fedEscapeRoomId");
+
+    const room =
+        await loadRoom(roomId);
+
+    if (!room) {
+
+        console.error(
+            "Unable to initialise room:",
+            roomId
+        );
+
+        return;
+
+    }
 
     renderPuzzle(room);
 
     startGameTimer(room.timeLimit);
 
-    document
-        .getElementById("puzzleForm")
-        .addEventListener("submit", (event) => {
+    const puzzleForm =
+        document.getElementById("puzzleForm");
+
+    puzzleForm.addEventListener(
+        "submit",
+        (event) => {
 
             event.preventDefault();
 
             submitAnswer(room);
 
-        });
+        }
+    );
 
-    document
-        .getElementById("restartMissionButton")
-        .addEventListener("click", () => {
+    const restartButton =
+        document.getElementById(
+            "restartMissionButton"
+        );
 
-            startNewMission(room.id);
+    if (restartButton) {
 
-            location.reload();
+        restartButton.addEventListener(
+            "click",
+            () => {
 
-        });
+                startNewMission(room.id);
+
+                location.reload();
+
+            }
+        );
+
+    }
 
 }
 
+
 function renderPuzzle(room) {
 
-    const currentPuzzle = Number(
-        localStorage.getItem("fedEscapeCurrentPuzzle")
-    );
+    const currentPuzzle =
+        Number(
+            localStorage.getItem(
+                "fedEscapeCurrentPuzzle"
+            )
+        );
 
-    if (currentPuzzle >= room.puzzles.length) {
+    if (
+        currentPuzzle >=
+        room.puzzles.length
+    ) {
 
         showCompletion(room);
 
@@ -78,86 +166,198 @@ function renderPuzzle(room) {
 
     }
 
-    const puzzle = room.puzzles[currentPuzzle];
+    const puzzle =
+        room.puzzles[currentPuzzle];
 
-    document.getElementById("puzzleProgress").textContent =
+    document.getElementById(
+        "puzzleProgress"
+    ).textContent =
         `Puzzle ${currentPuzzle + 1} of ${room.puzzles.length}`;
 
-    document.getElementById("puzzleCategory").textContent =
+    document.getElementById(
+        "puzzleCategory"
+    ).textContent =
         puzzle.category;
 
-    document.getElementById("puzzleTitle").textContent =
+    document.getElementById(
+        "puzzleTitle"
+    ).textContent =
         puzzle.title;
 
-    document.getElementById("puzzleQuestion").textContent =
+    document.getElementById(
+        "puzzleQuestion"
+    ).textContent =
         puzzle.question;
 
-    document.getElementById("currentScore").textContent =
-        localStorage.getItem("fedEscapeScore");
+    document.getElementById(
+        "currentScore"
+    ).textContent =
+        localStorage.getItem(
+            "fedEscapeScore"
+        );
 
     const progress =
         Math.round(
-            ((currentPuzzle + 1) / room.puzzles.length) * 100
+            (
+                (currentPuzzle + 1) /
+                room.puzzles.length
+            ) * 100
         );
 
-    document.getElementById("progressFill").style.width =
+    document.getElementById(
+        "progressFill"
+    ).style.width =
         progress + "%";
 
-    document.getElementById("progressText").textContent =
+    document.getElementById(
+        "progressText"
+    ).textContent =
         progress + "% Complete";
 
-    const answerOptions =
-        document.getElementById("answerOptions");
+    renderAnswerInput(puzzle);
 
-    answerOptions.innerHTML = "";
+    const message =
+        document.getElementById(
+            "puzzleMessage"
+        );
 
-    puzzle.options.forEach(option => {
-
-        answerOptions.innerHTML += `
-            <label class="answer-option">
-
-                <input
-                    type="radio"
-                    name="answer"
-                    value="${option}">
-
-                ${option}
-
-            </label>
-        `;
-
-    });
-
-    document.getElementById("puzzleMessage").textContent = "";
+    message.textContent = "";
+    message.style.color = "";
 
 }
 
-function submitAnswer(room) {
 
-    const selected =
-        document.querySelector('input[name="answer"]:checked');
+function renderAnswerInput(puzzle) {
 
-    const message =
-        document.getElementById("puzzleMessage");
+    const answerOptions =
+        document.getElementById(
+            "answerOptions"
+        );
 
-    if (!selected) {
+    answerOptions.innerHTML = "";
 
-        message.textContent = "Please choose an answer.";
+    /*
+        MULTIPLE-CHOICE QUESTION
+    */
+    if (
+        puzzle.type ===
+        "multiple-choice"
+    ) {
+
+        puzzle.options.forEach(
+            (option) => {
+
+                const label =
+                    document.createElement(
+                        "label"
+                    );
+
+                label.className =
+                    "answer-option";
+
+                const input =
+                    document.createElement(
+                        "input"
+                    );
+
+                input.type = "radio";
+                input.name = "answer";
+                input.value = option;
+
+                label.appendChild(input);
+
+                label.appendChild(
+                    document.createTextNode(
+                        " " + option
+                    )
+                );
+
+                answerOptions.appendChild(
+                    label
+                );
+
+            }
+        );
 
         return;
 
     }
 
-    const puzzleIndex = Number(
-        localStorage.getItem("fedEscapeCurrentPuzzle")
-    );
+
+    /*
+        TEXT-ENTRY QUESTION
+    */
+    if (puzzle.type === "text") {
+
+        const input =
+            document.createElement(
+                "input"
+            );
+
+        input.type = "text";
+        input.id = "textAnswer";
+        input.name = "answer";
+        input.placeholder =
+            "Enter your answer";
+
+        input.autocomplete = "off";
+
+        answerOptions.appendChild(
+            input
+        );
+
+        input.focus();
+
+    }
+
+}
+
+
+function submitAnswer(room) {
+
+    const puzzleIndex =
+        Number(
+            localStorage.getItem(
+                "fedEscapeCurrentPuzzle"
+            )
+        );
 
     const puzzle =
         room.puzzles[puzzleIndex];
 
-    if (selected.value !== puzzle.correctAnswer) {
+    const message =
+        document.getElementById(
+            "puzzleMessage"
+        );
 
-        message.style.color = "#ff5a5a";
+    const userAnswer =
+        getUserAnswer(puzzle);
+
+    if (!userAnswer) {
+
+        message.style.color =
+            "#ff5a5a";
+
+        message.textContent =
+            "Please enter or choose an answer.";
+
+        return;
+
+    }
+
+    const isCorrect =
+        checkAnswer(
+            userAnswer,
+            puzzle.correctAnswer
+        );
+
+    /*
+        INCORRECT ANSWER
+    */
+    if (!isCorrect) {
+
+        message.style.color =
+            "#ff5a5a";
 
         message.textContent =
             "❌ Incorrect. Please try again.";
@@ -166,65 +366,213 @@ function submitAnswer(room) {
 
     }
 
-    message.style.color = "#4CAF50";
+
+    /*
+        CORRECT ANSWER
+    */
+    message.style.color =
+        "#4CAF50";
 
     message.textContent =
-        "✅ Correct! " + puzzle.explanation;
+        "✅ Correct! " +
+        puzzle.explanation;
 
     const score =
-        Number(localStorage.getItem("fedEscapeScore"));
+        Number(
+            localStorage.getItem(
+                "fedEscapeScore"
+            )
+        );
 
     const correct =
-        Number(localStorage.getItem("fedEscapeCorrectAnswers"));
+        Number(
+            localStorage.getItem(
+                "fedEscapeCorrectAnswers"
+            )
+        );
+
+    const updatedScore =
+        score + puzzle.points;
 
     localStorage.setItem(
         "fedEscapeScore",
-        score + puzzle.points
+        updatedScore.toString()
     );
 
     localStorage.setItem(
         "fedEscapeCorrectAnswers",
-        correct + 1
+        (correct + 1).toString()
     );
 
     localStorage.setItem(
         "fedEscapeCurrentPuzzle",
-        puzzleIndex + 1
+        (puzzleIndex + 1).toString()
     );
 
-    document.getElementById("currentScore").textContent =
-        score + puzzle.points;
+    document.getElementById(
+        "currentScore"
+    ).textContent =
+        updatedScore;
 
-    setTimeout(() => {
+    /*
+        Wait briefly so the player can read
+        the correct-answer feedback.
+    */
+    setTimeout(
+        () => {
 
-        renderPuzzle(room);
+            renderPuzzle(room);
 
-    }, 1200);
+        },
+        1200
+    );
 
 }
+
+
+function getUserAnswer(puzzle) {
+
+    /*
+        MULTIPLE CHOICE
+    */
+    if (
+        puzzle.type ===
+        "multiple-choice"
+    ) {
+
+        const selected =
+            document.querySelector(
+                'input[name="answer"]:checked'
+            );
+
+        if (!selected) {
+            return "";
+        }
+
+        return selected.value;
+
+    }
+
+
+    /*
+        TEXT ENTRY
+    */
+    if (puzzle.type === "text") {
+
+        const textInput =
+            document.getElementById(
+                "textAnswer"
+            );
+
+        if (!textInput) {
+            return "";
+        }
+
+        return textInput.value.trim();
+
+    }
+
+    return "";
+
+}
+
+
+/*
+    Normalise answers before comparison.
+
+    For example:
+
+    HELLO
+    hello
+    Hello
+
+    are all treated as the same answer.
+*/
+function checkAnswer(
+    userAnswer,
+    correctAnswer
+) {
+
+    return (
+        String(userAnswer)
+            .trim()
+            .toLowerCase() ===
+
+        String(correctAnswer)
+            .trim()
+            .toLowerCase()
+    );
+
+}
+
 
 function showCompletion(room) {
 
     stopGameTimer();
 
-    document.getElementById("puzzleCategory").hidden = true;
-    document.getElementById("puzzleTitle").hidden = true;
-    document.getElementById("puzzleQuestion").hidden = true;
-    document.getElementById("puzzleForm").hidden = true;
+    localStorage.setItem(
+        "fedEscapeCompleted",
+        "true"
+    );
 
-    document.getElementById("completionScreen").hidden = false;
+    document.getElementById(
+        "puzzleCategory"
+    ).hidden = true;
 
-    document.getElementById("finalScore").textContent =
-        localStorage.getItem("fedEscapeScore");
+    document.getElementById(
+        "puzzleTitle"
+    ).hidden = true;
 
-    document.getElementById("finalCorrectAnswers").textContent =
-        localStorage.getItem("fedEscapeCorrectAnswers")
+    document.getElementById(
+        "puzzleQuestion"
+    ).hidden = true;
+
+    document.getElementById(
+        "puzzleForm"
+    ).hidden = true;
+
+    document.getElementById(
+        "completionScreen"
+    ).hidden = false;
+
+    document.getElementById(
+        "finalScore"
+    ).textContent =
+        localStorage.getItem(
+            "fedEscapeScore"
+        );
+
+    document.getElementById(
+        "finalCorrectAnswers"
+    ).textContent =
+        localStorage.getItem(
+            "fedEscapeCorrectAnswers"
+        )
         + " / "
         + room.puzzles.length;
 
-    document.getElementById("finalTime").textContent =
+    document.getElementById(
+        "finalTime"
+    ).textContent =
         formatGameTime(
-            Number(localStorage.getItem("fedEscapeTimeRemaining"))
+            Number(
+                localStorage.getItem(
+                    "fedEscapeTimeRemaining"
+                )
+            )
         );
+
+    /*
+        Save the completed result using
+        the existing results.js functionality.
+    */
+    if (
+        typeof saveFedEscapeResult ===
+        "function"
+    ) {
+
+        saveFedEscapeResult(room);
+
+    }
 
 }
