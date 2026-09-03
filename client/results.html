@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Student Results | FedEscape</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        /* Add professional spacing between each results section */
+        .dashboard-section {
+            margin-top: 55px;
+            margin-bottom: 55px;
+        }
+
+        /* Completed Rooms table */
+        .results-table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Add space between table columns */
+        .results-table th,
+        .results-table td {
+            padding: 18px 30px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        /* Make headings easier to read */
+        .results-table th {
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        /* Add separation between result rows */
+        .results-table td {
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        /* More space before Rankings / Leaderboard */
+        .leaderboard-card {
+            margin-top: 25px;
+        }
+
+        /* Leaderboard headings and rows */
+        .leaderboard-heading,
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 100px minmax(180px, 1fr) 150px 150px;
+            column-gap: 35px;
+            align-items: center;
+            padding: 18px 30px;
+        }
+
+        /* Leaderboard heading */
+        .leaderboard-heading {
+            font-weight: 600;
+        }
+
+        /* Separate each leaderboard result */
+        .leaderboard-row {
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        /* Give the leaderboard extra room at the bottom */
+        #leaderboardList {
+            margin-bottom: 10px;
+        }
+
+        /* Mobile/tablet support */
+        @media (max-width: 768px) {
+
+            .results-table th,
+            .results-table td {
+                padding: 14px 18px;
+            }
+
+            .leaderboard-heading,
+            .leaderboard-row {
+                grid-template-columns: 60px minmax(120px, 1fr) 80px 80px;
+                column-gap: 15px;
+                padding: 15px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="dashboard-page">
+
+
+<header class="dashboard-header">
+
+    <nav class="navbar dashboard-navbar">
+
+        <a
+            href="dashboard.html"
+            class="dashboard-logo"
+        >
+            FedEscape
+        </a>
+
+
+        <ul class="nav-links dashboard-nav-links">
+
+            <li>
+                <a href="dashboard.html">
+                    Dashboard
+                </a>
+            </li>
+           </li> 
+<a href="dashboard.html#available-rooms">
+            Rooms
+        </a>
+    </li>
+            <li>
+                <a
+                    href="results.html"
+                    class="active-nav-link"
+                >
+                    Results
+                </a>
+            </li>
+
+            <li>
+                <a href="index.html">
+                    Logout
+                </a>
+            </li>
+
+        </ul>
+
+    </nav>
+
+</header>
+
+
+<main class="dashboard-main">
+
+
+    <section class="results-header">
+
+        <p class="dashboard-eyebrow">
+            Student Progress
+        </p>
+
+        <h1>
+            My Results
+        </h1>
+
+        <p>
+            View your completed rooms,
+            scores, progress and leaderboard.
+        </p>
+
+    </section>
+
+
+
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="section-label">
+                    Performance
+                </p>
+
+                <h2>
+                    Progress Summary
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="results-summary-grid">
+
+
+            <div class="results-summary-card">
+
+                <h3 id="roomsCompleted">
+                    0
+                </h3>
+
+                <p>
+                    Rooms Completed
+                </p>
+
+            </div>
+
+
+            <div class="results-summary-card">
+
+                <h3 id="totalScore">
+                    0
+                </h3>
+
+                <p>
+                    Total Score
+                </p>
+
+            </div>
+
+
+            <div class="results-summary-card">
+
+                <h3 id="bestScore">
+                    0
+                </h3>
+
+                <p>
+                    Best Score
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="section-label">
+                    History
+                </p>
+
+                <h2>
+                    Completed Rooms
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="results-table-container">
+
+
+            <table class="results-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Room ID
+                        </th>
+
+                        <th>
+                            Score
+                        </th>
+
+                        <th>
+                            Completion Time
+                        </th>
+
+                        <th>
+                            Progress Status
+                        </th>
+
+                        <th>
+                            Completion Date
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="resultsTableBody">
+
+                </tbody>
+
+            </table>
+
+
+            <div
+                id="noResultsMessage"
+                class="no-results-message"
+            >
+
+                <h3>
+                    No completed rooms yet
+                </h3>
+
+                <p>
+                    Complete an escape room
+                    to see your results here.
+                </p>
+
+                <a
+                    href="dashboard.html#available-rooms"
+                    class="primary-btn"
+                >
+                    Play a Room
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="section-label">
+                    Rankings
+                </p>
+
+                <h2>
+                    Leaderboard
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="leaderboard-card">
+
+            <div class="leaderboard-heading">
+
+                <span>
+                    Rank
+                </span>
+
+                <span>
+                    Student ID
+                </span>
+
+                <span>
+                    Score
+                </span>
+
+                <span>
+                    Time
+                </span>
+
+            </div>
+
+
+            <div id="leaderboardList">
+
+            </div>
+
+
+            <div
+                id="noLeaderboardMessage"
+                class="no-results-message"
+            >
+
+                Complete a room to appear
+                on the leaderboard.
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+<script src="js/results.js"></script>
+
+
+</body>
+
+</html>

@@ -30,6 +30,12 @@ function startNewMission(roomId) {
     localStorage.setItem("fedEscapeTimeRemaining", room.timeLimit);
     localStorage.setItem("fedEscapeCompleted", false);
 
+localStorage.setItem(
+    "fedEscapeResultSaved",
+    "false"
+);
+    
+
 }
 
 function initialiseRoom() {
@@ -222,9 +228,18 @@ function showCompletion(room) {
         + " / "
         + room.puzzles.length;
 
-    document.getElementById("finalTime").textContent =
-        formatGameTime(
-            Number(localStorage.getItem("fedEscapeTimeRemaining"))
-        );
+   document.getElementById("finalTime").textContent =
+    formatGameTime(
+        Number(localStorage.getItem("fedEscapeTimeRemaining"))
+    );
+
+/*
+    Record the completed result.
+    The saving logic is kept in results.js
+    so game.js remains focused on gameplay.
+*/
+saveFedEscapeResult(room);
+
+
 
 }
