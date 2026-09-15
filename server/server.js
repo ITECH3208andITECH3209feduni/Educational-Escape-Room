@@ -13,11 +13,8 @@ require("dotenv").config();
 // ======================================================
 
 const authRoutes = require("./routes/authRoutes");
-
-// Future routes will be added here:
-// const roomRoutes = require("./routes/roomRoutes");
-// const questionRoutes = require("./routes/questionRoutes");
-// const progressRoutes = require("./routes/progressRoutes");
+const roomRoutes = require("./routes/roomRoutes");
+const attemptRoutes = require("./routes/attemptRoutes");
 
 // ======================================================
 // Create Express Application
@@ -28,19 +25,79 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ======================================================
-// Middleware
+// Basic Express / Security Configuration
 // ======================================================
 
-// Allow frontend to communicate with backend
-app.use(cors());
+app.disable("x-powered-by");
 
-// Allow Express to read JSON request bodies
-app.use(express.json());
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
 
-// Allow URL encoded form data
+// ======================================================
+// CORS Configuration
+// ======================================================
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500",
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow PowerShell, Postman and other requests
+      // that do not send an Origin header.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Development
+      if (process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+
+      // Production
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization"
+    ]
+  })
+);
+
+// ======================================================
+// Request Body Middleware
+// ======================================================
+
+app.use(
+  express.json({
+    limit: "10mb"
+  })
+);
+
 app.use(
   express.urlencoded({
-    extended: true
+    extended: true,
+    limit: "10mb"
   })
 );
 
@@ -48,40 +105,39 @@ app.use(
 // API Routes
 // ======================================================
 
-// Authentication
 app.use("/api/auth", authRoutes);
-
-// Future API routes:
-// app.use("/api/rooms", roomRoutes);
-// app.use("/api/questions", questionRoutes);
-// app.use("/api/progress", progressRoutes);
+app.use("/api/rooms", roomRoutes);
+app.use("/api/attempts", attemptRoutes);
 
 // ======================================================
-// Backend Health / Test Route
+// Health Routes
 // ======================================================
 
 app.get("/", (req, res) => {
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "FedEscape backend is running"
   });
 });
 
-// API health check
 app.get("/api/health", (req, res) => {
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "FedEscape API is healthy",
+    database:
+      mongoose.connection.readyState === 1
+        ? "connected"
+        : "disconnected",
     timestamp: new Date().toISOString()
   });
 });
 
 // ======================================================
-// Handle Unknown Routes
+// 404 Handler
 // ======================================================
 
 app.use((req, res) => {
-  res.status(404).json({
+  return res.status(404).json({
     success: false,
     message: "API route not found"
   });
@@ -91,10 +147,29 @@ app.use((req, res) => {
 // Global Error Handler
 // ======================================================
 
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error("Server error:", err);
 
-  res.status(err.status || 500).json({
+  if (
+    err instanceof SyntaxError &&
+    err.status === 400 &&
+    "body" in err
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid JSON request"
+    });
+  }
+
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({
+      success: false,
+      message: "Request blocked by CORS policy"
+    });
+  }
+
+  return res.status(err.status || 500).json({
     success: false,
     message:
       process.env.NODE_ENV === "production"
@@ -104,20 +179,20 @@ app.use((err, req, res, next) => {
 });
 
 // ======================================================
-// Connect to MongoDB Atlas
+// MongoDB Connection
 // ======================================================
 
 const connectDatabase = async () => {
   try {
+    if (!process.env.MONGO_URI) {
+      throw new Error(
+        "MONGO_URI is missing from the environment configuration"
+      );
+    }
+
     await mongoose.connect(process.env.MONGO_URI);
 
     console.log("MongoDB connected successfully");
-
-    // Start server only after database connection succeeds
-    app.listen(PORT, () => {
-      console.log(`FedEscape server running on port ${PORT}`);
-      console.log(`http://localhost:${PORT}`);
-    });
   } catch (error) {
     console.error(
       "MongoDB connection failed:",
@@ -129,27 +204,108 @@ const connectDatabase = async () => {
 };
 
 // ======================================================
-// Start Application
+// Start Server
 // ======================================================
 
-connectDatabase();
+let server;
+
+const startServer = async () => {
+  try {
+    await connectDatabase();
+
+    server = app.listen(PORT, () => {
+      console.log("======================================");
+      console.log("FedEscape Backend");
+      console.log(`Server running on port ${PORT}`);
+      console.log(`http://localhost:${PORT}`);
+      console.log(
+        `Environment: ${process.env.NODE_ENV || "development"}`
+      );
+      console.log("======================================");
+    });
+  } catch (error) {
+    console.error(
+      "Failed to start FedEscape server:",
+      error.message
+    );
+
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // ======================================================
-// Handle Unexpected Errors
+// Graceful Shutdown
+// ======================================================
+
+let isShuttingDown = false;
+
+const shutdown = async (signal) => {
+  if (isShuttingDown) {
+    return;
+  }
+
+  isShuttingDown = true;
+
+  console.log(
+    `\n${signal} received. Shutting down FedEscape...`
+  );
+
+  try {
+    if (server) {
+      await new Promise((resolve) => {
+        server.close(resolve);
+      });
+    }
+
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+      console.log("MongoDB connection closed");
+    }
+
+    console.log("FedEscape server stopped");
+    process.exit(0);
+  } catch (error) {
+    console.error(
+      "Shutdown error:",
+      error.message
+    );
+
+    process.exit(1);
+  }
+};
+
+process.on("SIGINT", () => {
+  shutdown("SIGINT");
+});
+
+process.on("SIGTERM", () => {
+  shutdown("SIGTERM");
+});
+
+// ======================================================
+// Unexpected Errors
 // ======================================================
 
 process.on("unhandledRejection", (error) => {
   console.error(
     "Unhandled Promise Rejection:",
-    error.message
+    error
   );
 });
 
 process.on("uncaughtException", (error) => {
   console.error(
     "Uncaught Exception:",
-    error.message
+    error
   );
 
   process.exit(1);
 });
+
+// ======================================================
+// Export App
+// ======================================================
+
+module.exports = app;
