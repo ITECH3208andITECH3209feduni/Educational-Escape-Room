@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room Creator | FedEscape</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+    >
+</head>
+<body class="dashboard-page">
+    <header class="dashboard-header">
+        <nav class="navbar dashboard-navbar">
+            <a href="dashboard.html" class="dashboard-logo">
+                FedEscape
+            </a>
+
+            <ul class="nav-links dashboard-nav-links">
+
+                <li>
+                    <a
+                        href="../teacherdashboard.html"
+                        class="active-nav-link"
+                    >
+                        Dashboard
+                    </a>
+                </li>
+
+                <li>
+                    <a href="../rooms/escaperoomcreate.html">
+                        Rooms
+                    </a>
+                </li>
+                <li>
+                    <a href="../results.html">
+                        Results
+                    </a>
+                </li>
+                <li>
+                    <a href="../index.html">
+                        Logout
+                    </a>
+                </li>
+
+                
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <nav>
+            <button class="primary-btn dashboard-hero-button" onclick="showPage('rooms')">View Rooms</button>
+            <button class="primary-btn dashboard-hero-button" onclick="showPage('create')">Create Rooms</button>
+            <button class="primary-btn dashboard-hero-button" onclick="showPage('results')">View Results</button>
+        </nav>
+        <!--view-->
+        <section id="roomsPage">
+                <h2>Rooms</h2>
+                <div id="roomList"></div>
+        </section>
+        <!--create-->
+        <section id="createPage" class="hidden">
+                <h2 id="formTitle">Create Room</h2>
+                <form id="roomForm">
+                    <input type="hidden" id="roomId">
+                    <label>
+                        Room Name
+                        <input type="text" id="roomName" required>
+                    </label>
+                    <label>
+                        Description
+                        <textarea id="roomDescription" required>
+                        </textarea>
+                    </label>
+                    <label>
+                        Time Limit
+                        <input type="number" id="roomTime" required>
+                    </label>
+                    <button class="primary-btn dashboard-hero-button" type="submit">Save Room</button>
+                    <button class="primary-btn dashboard-hero-button" type="button" onclick="showPage('rooms')">Cancel</button>
+                </form>
+        </section>
+        <!--results-->
+        <section id="resultsPage" class="hidden">
+            <h2>Results</h2>
+            <div id="resultsList"></div>
+        </section>
+    </main>
+    <footer class="dashboard-footer">
+        <p>
+            &copy; 2026 FedEscape
+        </p>
+        <p>
+            Educational Escape Room Platform |
+            Federation University Australia
+        </p>
+    </footer>
+<script src="../js/educreateroom.js"></script>
+</body>
+</html>

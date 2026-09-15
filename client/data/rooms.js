@@ -13,6 +13,7 @@ const rooms = {
         puzzles: [
             {
                 id: 1,
+                type: "multiple-choice",
                 category: "Network Security",
                 title: "Secure the Connection",
                 question:
@@ -31,6 +32,7 @@ const rooms = {
 
             {
                 id: 2,
+                type: "multiple-choice",
                 category: "Password Security",
                 title: "Strengthen the Password",
                 question:
@@ -43,25 +45,33 @@ const rooms = {
                 ],
                 correctAnswer: "F3d!Escape#2026",
                 explanation:
-                    "A strong password uses a mixture of uppercase and lowercase letters, numbers and special characters.",
+                    "A strong password uses uppercase and lowercase letters, numbers and special characters.",
                 points: 100
             },
 
             {
                 id: 3,
+                type: "text",
                 category: "Cipher Analysis",
                 title: "Recover the Access Code",
                 question:
                     "The attacker shifted every letter forward by one. Decode this message: IFMMP",
-                options: [
-                    "HELLO",
-                    "WORLD",
-                    "ADMIN",
-                    "LOGIN"
-                ],
                 correctAnswer: "HELLO",
                 explanation:
                     "Moving every letter in IFMMP back by one produces HELLO.",
+                points: 100
+            },
+
+            {
+                id: 4,
+                type: "text",
+                category: "Cyber Awareness",
+                title: "Identify the Threat",
+                question:
+                    "What type of cyberattack tricks users into revealing passwords or sensitive information?",
+                correctAnswer: "phishing",
+                explanation:
+                    "Phishing uses deceptive emails, messages or websites to steal sensitive information.",
                 points: 100
             }
         ]
