@@ -5,74 +5,635 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Cybersecurity Escape Room | FedEscape</title>
+    <title>Escape Room | FedEscape</title>
 
     <link rel="stylesheet" href="../../css/style.css">
 </head>
 
 <body>
+
+    <!-- ==================================================
+         NAVIGATION
+    =================================================== -->
+
     <header>
+
         <nav class="navbar">
+
             <div class="logo">
                 <h1>FedEscape</h1>
             </div>
 
             <ul class="nav-links">
-                <li><a href="../../dashboard.html">Dashboard</a></li>
-                <li><a href="../../index.html">Home</a></li>
+
+                <li>
+                    <a href="../../dashboard.html">
+                        Dashboard
+                    </a>
+                </li>
+
+                <li>
+                    <a href="../../index.html">
+                        Home
+                    </a>
+                </li>
 
             </ul>
+
         </nav>
+
     </header>
 
+
+    <!-- ==================================================
+         ESCAPE ROOM INTRODUCTION
+    =================================================== -->
+
     <main class="game-page">
+
         <section class="mission-card">
 
-            <p class="mission-label">Demo Escape Room</p>
-
-            <h2>Cybersecurity Emergency</h2>
-
-            <div class="mission-warning">
-                Security breach detected
-            </div>
-
-            <p class="mission-description">
-                Federation University's computer server has been compromised.
-                You have 15 minutes to solve three cybersecurity puzzles and
-                recover administrator access before the files are encrypted.
+            <!-- Category -->
+            <p
+                class="mission-label"
+                id="missionLabel"
+            >
+                Loading Escape Room...
             </p>
 
-            <div class="mission-details">
-                <div class="mission-detail">
-                    <strong>4</strong>
-                    <span>Puzzles</span>
-                </div>
 
-                <div class="mission-detail">
-                    <strong>15:00</strong>
-                    <span>Time limit</span>
-                </div>
+            <!-- Room Name -->
+            <h2 id="missionTitle">
+                Loading...
+            </h2>
 
-                <div class="mission-detail">
-                    <strong>IT</strong>
-                    <span>Topic</span>
-                </div>
+
+            <!-- Mission Status -->
+            <div
+                class="mission-warning"
+                id="missionWarning"
+            >
+                Mission Ready
             </div>
 
-            <button id="startMissionButton" class="primary-btn" type="button">
-                Start Mission
+
+            <!-- Room Description -->
+            <p
+                class="mission-description"
+                id="missionDescription"
+            >
+                Loading mission information...
+            </p>
+
+
+            <!-- ==================================================
+                 ROOM INFORMATION
+            =================================================== -->
+
+            <div class="mission-details">
+
+                <!-- Number of Questions -->
+                <div class="mission-detail">
+
+                    <strong id="missionQuestionCount">
+                        -
+                    </strong>
+
+                    <span>
+                        Challenges
+                    </span>
+
+                </div>
+
+
+                <!-- Time Limit -->
+                <div class="mission-detail">
+
+                    <strong id="missionTime">
+                        -
+                    </strong>
+
+                    <span>
+                        Time limit
+                    </span>
+
+                </div>
+
+
+                <!-- Difficulty -->
+                <div class="mission-detail">
+
+                    <strong id="missionDifficulty">
+                        -
+                    </strong>
+
+                    <span>
+                        Difficulty
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==================================================
+                 ROOM INSTRUCTIONS
+            =================================================== -->
+
+            <p
+                class="mission-description"
+                id="missionInstructions"
+                hidden
+            ></p>
+
+
+            <!-- ==================================================
+                 START BUTTON
+            =================================================== -->
+
+            <button
+                id="startMissionButton"
+                class="primary-btn"
+                type="button"
+                disabled
+            >
+                Loading Mission...
             </button>
 
         </section>
+
     </main>
 
+
+    <!-- ==================================================
+         FOOTER
+    =================================================== -->
+
     <footer>
-        <p>&copy; 2026 FedEscape</p>
-        <p>Educational Escape Room Platform</p>
+
+        <p>
+            &copy; 2026 FedEscape
+        </p>
+
+        <p>
+            Educational Escape Room Platform
+        </p>
+
     </footer>
 
-    <script src="../../data/rooms.js"></script>
+
+    <!-- ==================================================
+         DYNAMIC MONGODB ROOM INTRODUCTION
+    =================================================== -->
+
+    <script>
+
+        "use strict";
+
+
+        const INTRO_API_BASE_URL =
+            "http://localhost:5000/api";
+
+
+        // ==================================================
+        // LOAD ROOM WHEN PAGE OPENS
+        // ==================================================
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            loadMissionIntroduction
+        );
+
+
+        // ==================================================
+        // LOAD SELECTED ROOM FROM BACKEND
+        // GET /api/rooms/:roomId
+        // ==================================================
+
+        async function loadMissionIntroduction() {
+
+            const roomId =
+                localStorage.getItem(
+                    "fedEscapeSelectedRoomId"
+                ) ||
+                localStorage.getItem(
+                    "fedEscapeRoomId"
+                );
+
+
+            const token =
+                localStorage.getItem(
+                    "fedEscapeToken"
+                );
+
+
+            // ----------------------------------------------
+            // Room ID check
+            // ----------------------------------------------
+
+            if (!roomId) {
+
+                showIntroError(
+                    "No escape room has been selected."
+                );
+
+                return;
+            }
+
+
+            // ----------------------------------------------
+            // Authentication check
+            // ----------------------------------------------
+
+            if (!token) {
+
+                alert(
+                    "Please log in before opening an escape room."
+                );
+
+
+                window.location.href =
+                    "../../login.html";
+
+
+                return;
+            }
+
+
+            try {
+
+                // ------------------------------------------
+                // Request selected MongoDB room
+                // ------------------------------------------
+
+                const response = await fetch(
+                    `${INTRO_API_BASE_URL}/rooms/${roomId}`,
+                    {
+                        method: "GET",
+
+                        headers: {
+
+                            "Authorization":
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+
+                const data =
+                    await response.json();
+
+
+                // ------------------------------------------
+                // Backend error
+                // ------------------------------------------
+
+                if (!response.ok) {
+
+                    console.error(
+                        "Unable to load room:",
+                        data
+                    );
+
+
+                    showIntroError(
+                        data.message ||
+                        "Unable to load this escape room."
+                    );
+
+
+                    return;
+                }
+
+
+                // ------------------------------------------
+                // Missing room object
+                // ------------------------------------------
+
+                if (!data.room) {
+
+                    console.error(
+                        "Room missing from response:",
+                        data
+                    );
+
+
+                    showIntroError(
+                        "Room information was not returned by the server."
+                    );
+
+
+                    return;
+                }
+
+
+                // ------------------------------------------
+                // Render room information
+                // ------------------------------------------
+
+                renderMissionIntroduction(
+                    data.room
+                );
+
+
+                console.log(
+                    "Intro room loaded from MongoDB:",
+                    data.room
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Intro room loading error:",
+                    error
+                );
+
+
+                showIntroError(
+                    "Unable to connect to the FedEscape server."
+                );
+            }
+        }
+
+
+        // ==================================================
+        // DISPLAY ROOM INFORMATION
+        // ==================================================
+
+        function renderMissionIntroduction(room) {
+
+            // ----------------------------------------------
+            // Browser tab title
+            // ----------------------------------------------
+
+            document.title =
+                `${room.name || "Escape Room"} | FedEscape`;
+
+
+            // ----------------------------------------------
+            // Category
+            // ----------------------------------------------
+
+            setIntroText(
+                "missionLabel",
+                room.category ||
+                "Escape Room"
+            );
+
+
+            // ----------------------------------------------
+            // Room name
+            // ----------------------------------------------
+
+            setIntroText(
+                "missionTitle",
+                room.name ||
+                "Escape Room"
+            );
+
+
+            // ----------------------------------------------
+            // Mission status
+            // ----------------------------------------------
+
+            setIntroText(
+                "missionWarning",
+                "Mission Ready"
+            );
+
+
+            // ----------------------------------------------
+            // Description
+            // ----------------------------------------------
+
+            setIntroText(
+                "missionDescription",
+                room.description ||
+                "Complete the challenges to finish this escape room."
+            );
+
+
+            // ----------------------------------------------
+            // Number of questions
+            // ----------------------------------------------
+
+            const questionCount =
+                Array.isArray(
+                    room.questions
+                )
+                    ? room.questions.length
+                    : 0;
+
+
+            setIntroText(
+                "missionQuestionCount",
+                String(
+                    questionCount
+                )
+            );
+
+
+            // ----------------------------------------------
+            // Time limit
+            // MongoDB stores room.time in minutes
+            // ----------------------------------------------
+
+            const minutes =
+                Number(
+                    room.time || 0
+                );
+
+
+            setIntroText(
+                "missionTime",
+                `${minutes}:00`
+            );
+
+
+            // ----------------------------------------------
+            // Difficulty
+            // ----------------------------------------------
+
+            const difficulty =
+                room.difficulty
+                    ? capitalise(
+                        room.difficulty
+                    )
+                    : "Not Set";
+
+
+            setIntroText(
+                "missionDifficulty",
+                difficulty
+            );
+
+
+            // ----------------------------------------------
+            // Instructions
+            // ----------------------------------------------
+
+            const instructions =
+                document.getElementById(
+                    "missionInstructions"
+                );
+
+
+            if (
+                instructions &&
+                room.instructions
+            ) {
+
+                instructions.textContent =
+                    room.instructions;
+
+
+                instructions.hidden =
+                    false;
+            }
+
+
+            // ----------------------------------------------
+            // Enable Start Mission button
+            // ----------------------------------------------
+
+            const startButton =
+                document.getElementById(
+                    "startMissionButton"
+                );
+
+
+            if (startButton) {
+
+                startButton.disabled =
+                    false;
+
+
+                startButton.textContent =
+                    "Start Mission";
+            }
+        }
+
+
+        // ==================================================
+        // DISPLAY ERROR
+        // ==================================================
+
+        function showIntroError(message) {
+
+            setIntroText(
+                "missionLabel",
+                "Escape Room"
+            );
+
+
+            setIntroText(
+                "missionTitle",
+                "Unable to Load Mission"
+            );
+
+
+            setIntroText(
+                "missionWarning",
+                "Mission Unavailable"
+            );
+
+
+            setIntroText(
+                "missionDescription",
+                message
+            );
+
+
+            setIntroText(
+                "missionQuestionCount",
+                "-"
+            );
+
+
+            setIntroText(
+                "missionTime",
+                "-"
+            );
+
+
+            setIntroText(
+                "missionDifficulty",
+                "-"
+            );
+
+
+            const startButton =
+                document.getElementById(
+                    "startMissionButton"
+                );
+
+
+            if (startButton) {
+
+                startButton.disabled =
+                    true;
+
+
+                startButton.textContent =
+                    "Mission Unavailable";
+            }
+        }
+
+
+        // ==================================================
+        // HELPER: SET TEXT
+        // ==================================================
+
+        function setIntroText(
+            elementId,
+            value
+        ) {
+
+            const element =
+                document.getElementById(
+                    elementId
+                );
+
+
+            if (element) {
+
+                element.textContent =
+                    value;
+            }
+        }
+
+
+        // ==================================================
+        // HELPER: CAPITALISE
+        // ==================================================
+
+        function capitalise(value) {
+
+            const text =
+                String(value);
+
+
+            return (
+                text.charAt(0).toUpperCase() +
+                text.slice(1)
+            );
+        }
+
+    </script>
+
+
+    <!-- ==================================================
+         GAME LOGIC
+
+         game.js handles the Start Mission button,
+         creates/resumes the backend attempt and opens
+         room.html.
+    =================================================== -->
+
     <script src="../../js/game.js"></script>
+
+
 </body>
 
 </html>

@@ -1,250 +1,814 @@
 "use strict";
 
-document.addEventListener("DOMContentLoaded", () => {
+// ======================================================
+// FedEscape Game
+// Backend + MongoDB integrated version
+// ======================================================
+
+const GAME_API_BASE_URL = "http://localhost:5000/api";
+
+let currentRoom = null;
+let answerSubmitting = false;
+
+// Prevents the completion API from being called twice.
+let missionCompleting = false;
+
+
+// ======================================================
+// PAGE INITIALISATION
+// ======================================================
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    // --------------------------------------------------
+    // START MISSION BUTTON
+    // Used on intro.html
+    // --------------------------------------------------
 
     const startMissionButton =
         document.getElementById("startMissionButton");
 
     if (startMissionButton) {
 
-        startMissionButton.addEventListener("click", () => {
+        startMissionButton.addEventListener(
+            "click",
+            async () => {
 
-            startNewMission("cyber-security");
+                const roomId =
+                    localStorage.getItem(
+                        "fedEscapeSelectedRoomId"
+                    ) ||
+                    localStorage.getItem(
+                        "fedEscapeRoomId"
+                    );
 
-            window.location.href = "room.html";
+                if (!roomId) {
 
-        });
+                    alert(
+                        "Unable to identify the selected escape room."
+                    );
 
+                    return;
+                }
+
+
+                startMissionButton.disabled = true;
+
+                startMissionButton.textContent =
+                    "Starting Mission...";
+
+
+                const started =
+                    await startNewMission(roomId);
+
+
+                if (started) {
+
+                    window.location.href =
+                        "room.html";
+
+                    return;
+                }
+
+
+                startMissionButton.disabled = false;
+
+                startMissionButton.textContent =
+                    "Start Mission";
+            }
+        );
     }
 
-    if (document.getElementById("puzzleForm")) {
-        initialiseRoom();
+
+    // --------------------------------------------------
+    // GAME PAGE
+    // --------------------------------------------------
+
+    if (
+        document.getElementById(
+            "puzzleForm"
+        )
+    ) {
+
+        await initialiseRoom();
     }
 
 });
 
 
-function startNewMission(roomId) {
+// ======================================================
+// START / RESUME ATTEMPT
+//
+// POST /api/attempts/start/:roomId
+// ======================================================
 
-    const room = rooms[roomId];
+async function startNewMission(roomId) {
 
-    if (!room) {
-        console.error("Room not found:", roomId);
-        return;
+    const token =
+        localStorage.getItem(
+            "fedEscapeToken"
+        );
+
+
+    if (!token) {
+
+        alert(
+            "Please log in before starting a mission."
+        );
+
+        window.location.href =
+            "../../login.html";
+
+        return false;
     }
 
-    localStorage.setItem("fedEscapeRoomId", roomId);
-    localStorage.setItem("fedEscapeCurrentPuzzle", "0");
-    localStorage.setItem("fedEscapeScore", "0");
-    localStorage.setItem("fedEscapeCorrectAnswers", "0");
 
-    localStorage.setItem(
-        "fedEscapeTimeRemaining",
-        room.timeLimit.toString()
-    );
+    if (!roomId) {
 
-    localStorage.setItem("fedEscapeCompleted", "false");
-    localStorage.setItem("fedEscapeResultSaved", "false");
+        alert(
+            "Unable to identify the selected escape room."
+        );
 
-}
+        return false;
+    }
 
-
-/*
-    Try to load the room from the backend.
-
-    If the backend room API is not available yet,
-    the game will automatically use rooms.js instead.
-*/
-async function loadRoom(roomId) {
 
     try {
 
         const response = await fetch(
-            `http://localhost:5000/api/rooms/${roomId}`
+            `${GAME_API_BASE_URL}/attempts/start/${roomId}`,
+            {
+                method: "POST",
+
+                headers: {
+
+                    "Authorization":
+                        `Bearer ${token}`,
+
+                    "Content-Type":
+                        "application/json"
+                }
+            }
         );
 
+
+        const data =
+            await response.json();
+
+
         if (!response.ok) {
-            throw new Error("Room API not available");
+
+            console.error(
+                "Unable to start attempt:",
+                data
+            );
+
+
+            alert(
+                data.message ||
+                "Unable to start the escape room."
+            );
+
+
+            return false;
         }
 
-        const room = await response.json();
 
-        console.log("Room loaded from backend.");
+        const attempt =
+            data.attempt;
 
-        return room;
+
+        if (
+            !attempt ||
+            !attempt._id
+        ) {
+
+            console.error(
+                "Attempt missing from response:",
+                data
+            );
+
+
+            alert(
+                "The server did not return an escape room attempt."
+            );
+
+
+            return false;
+        }
+
+
+        // --------------------------------------------------
+        // Store real MongoDB identifiers
+        // --------------------------------------------------
+
+        localStorage.setItem(
+            "fedEscapeRoomId",
+            roomId
+        );
+
+
+        localStorage.setItem(
+            "fedEscapeSelectedRoomId",
+            roomId
+        );
+
+
+        localStorage.setItem(
+            "fedEscapeAttemptId",
+            attempt._id
+        );
+
+
+        // --------------------------------------------------
+        // Restore progress when backend resumes
+        // an existing in-progress attempt.
+        // --------------------------------------------------
+
+        const answers =
+            Array.isArray(
+                attempt.answers
+            )
+                ? attempt.answers
+                : [];
+
+
+        const currentQuestion =
+            Number(
+                attempt.currentQuestion ??
+                answers.length ??
+                0
+            );
+
+
+        const score =
+            Number(
+                attempt.score || 0
+            );
+
+
+        const correctAnswers =
+            answers.filter(
+                (answer) =>
+                    answer.isCorrect === true
+            ).length;
+
+
+        localStorage.setItem(
+            "fedEscapeCurrentPuzzle",
+            String(currentQuestion)
+        );
+
+
+        localStorage.setItem(
+            "fedEscapeScore",
+            String(score)
+        );
+
+
+        localStorage.setItem(
+            "fedEscapeCorrectAnswers",
+            String(correctAnswers)
+        );
+
+
+        localStorage.setItem(
+            "fedEscapeCompleted",
+            "false"
+        );
+
+
+        // New attempt/resume is not currently completing.
+        missionCompleting = false;
+
+
+        console.log(
+            "FedEscape attempt ready:",
+            attempt
+        );
+
+
+        return true;
 
     } catch (error) {
 
-        console.warn(
-            "Backend unavailable. Using local room data."
+        console.error(
+            "Start attempt error:",
+            error
         );
 
-        return rooms[roomId];
 
+        alert(
+            "Unable to connect to the FedEscape server."
+        );
+
+
+        return false;
     }
-
 }
 
+
+// ======================================================
+// LOAD ROOM FROM MONGODB
+//
+// GET /api/rooms/:id
+// ======================================================
+
+async function loadRoom(roomId) {
+
+    const token =
+        localStorage.getItem(
+            "fedEscapeToken"
+        );
+
+
+    if (!token) {
+
+        alert(
+            "Your login session is missing. Please log in again."
+        );
+
+
+        window.location.href =
+            "../../login.html";
+
+
+        return null;
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `${GAME_API_BASE_URL}/rooms/${roomId}`,
+            {
+                method: "GET",
+
+                headers: {
+
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            console.error(
+                "Unable to load room:",
+                data
+            );
+
+
+            alert(
+                data.message ||
+                "Unable to load the escape room."
+            );
+
+
+            return null;
+        }
+
+
+        if (!data.room) {
+
+            console.error(
+                "Room missing from API response:",
+                data
+            );
+
+
+            return null;
+        }
+
+
+        console.log(
+            "Room loaded from MongoDB:",
+            data.room
+        );
+
+
+        return data.room;
+
+    } catch (error) {
+
+        console.error(
+            "Load room error:",
+            error
+        );
+
+
+        alert(
+            "Unable to connect to the FedEscape server."
+        );
+
+
+        return null;
+    }
+}
+
+
+// ======================================================
+// INITIALISE GAME PAGE
+// ======================================================
 
 async function initialiseRoom() {
 
     const roomId =
-        localStorage.getItem("fedEscapeRoomId");
+        localStorage.getItem(
+            "fedEscapeRoomId"
+        ) ||
+        localStorage.getItem(
+            "fedEscapeSelectedRoomId"
+        );
 
-    const room =
+
+    if (!roomId) {
+
+        console.error(
+            "No FedEscape room ID was found."
+        );
+
+
+        alert(
+            "No escape room has been selected."
+        );
+
+
+        return;
+    }
+
+
+    currentRoom =
         await loadRoom(roomId);
 
-    if (!room) {
+
+    if (!currentRoom) {
 
         console.error(
             "Unable to initialise room:",
             roomId
         );
 
-        return;
 
+        return;
     }
 
-    renderPuzzle(room);
 
-    startGameTimer(room.timeLimit);
+    // --------------------------------------------------
+    // Set browser tab dynamically.
+    // --------------------------------------------------
+
+    document.title =
+        `${currentRoom.name || "Escape Room"} | FedEscape`;
+
+
+    // --------------------------------------------------
+    // Validate questions
+    // --------------------------------------------------
+
+    if (
+        !Array.isArray(
+            currentRoom.questions
+        ) ||
+        currentRoom.questions.length === 0
+    ) {
+
+        alert(
+            "This escape room does not contain any questions."
+        );
+
+
+        return;
+    }
+
+
+    // --------------------------------------------------
+    // Sort questions by educator-defined order.
+    // --------------------------------------------------
+
+    currentRoom.questions.sort(
+        (a, b) =>
+            Number(a.order || 0) -
+            Number(b.order || 0)
+    );
+
+
+    // --------------------------------------------------
+    // Initialise timer.
+    //
+    // MongoDB room.time = minutes.
+    // timer.js works with seconds.
+    // --------------------------------------------------
+
+    const savedTime =
+        localStorage.getItem(
+            "fedEscapeTimeRemaining"
+        );
+
+
+    if (
+        savedTime === null ||
+        Number(savedTime) <= 0
+    ) {
+
+        localStorage.setItem(
+            "fedEscapeTimeRemaining",
+            String(
+                Number(
+                    currentRoom.time
+                ) * 60
+            )
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Render current question.
+    // --------------------------------------------------
+
+    renderPuzzle(
+        currentRoom
+    );
+
+
+    // --------------------------------------------------
+    // Start timer.
+    // --------------------------------------------------
+
+    if (
+        typeof startGameTimer ===
+        "function"
+    ) {
+
+        startGameTimer(
+            Number(
+                currentRoom.time
+            ) * 60
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Answer form
+    // --------------------------------------------------
 
     const puzzleForm =
-        document.getElementById("puzzleForm");
+        document.getElementById(
+            "puzzleForm"
+        );
 
-    puzzleForm.addEventListener(
-        "submit",
-        (event) => {
 
-            event.preventDefault();
+    if (puzzleForm) {
 
-            submitAnswer(room);
+        puzzleForm.addEventListener(
+            "submit",
+            async (event) => {
 
-        }
-    );
+                event.preventDefault();
+
+
+                await submitAnswer(
+                    currentRoom
+                );
+            }
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Restart mission
+    // --------------------------------------------------
 
     const restartButton =
         document.getElementById(
             "restartMissionButton"
         );
 
+
     if (restartButton) {
 
         restartButton.addEventListener(
             "click",
-            () => {
+            async () => {
 
-                startNewMission(room.id);
-
-                location.reload();
-
+                await restartMission(
+                    currentRoom
+                );
             }
         );
-
     }
-
 }
 
 
+// ======================================================
+// RENDER CURRENT QUESTION
+// ======================================================
+
 function renderPuzzle(room) {
+
+    const questions =
+        room.questions || [];
+
 
     const currentPuzzle =
         Number(
             localStorage.getItem(
                 "fedEscapeCurrentPuzzle"
-            )
+            ) || 0
         );
+
+
+    // --------------------------------------------------
+    // All questions already answered.
+    // --------------------------------------------------
 
     if (
         currentPuzzle >=
-        room.puzzles.length
+        questions.length
     ) {
 
-        showCompletion(room);
+        completeMission(
+            room
+        );
+
 
         return;
-
     }
 
-    const puzzle =
-        room.puzzles[currentPuzzle];
 
-    document.getElementById(
-        "puzzleProgress"
-    ).textContent =
-        `Puzzle ${currentPuzzle + 1} of ${room.puzzles.length}`;
+    const question =
+        questions[
+            currentPuzzle
+        ];
 
-    document.getElementById(
-        "puzzleCategory"
-    ).textContent =
-        puzzle.category;
 
-    document.getElementById(
-        "puzzleTitle"
-    ).textContent =
-        puzzle.title;
+    // --------------------------------------------------
+    // Puzzle number
+    // --------------------------------------------------
 
-    document.getElementById(
-        "puzzleQuestion"
-    ).textContent =
-        puzzle.question;
+    setElementText(
+        "puzzleProgress",
+        `Puzzle ${currentPuzzle + 1} of ${questions.length}`
+    );
 
-    document.getElementById(
-        "currentScore"
-    ).textContent =
+
+    // --------------------------------------------------
+    // Category
+    // --------------------------------------------------
+
+    setElementText(
+        "puzzleCategory",
+        room.category ||
+        "Escape Room"
+    );
+
+
+    // --------------------------------------------------
+    // Challenge heading
+    // --------------------------------------------------
+
+    setElementText(
+        "puzzleTitle",
+        `Challenge ${currentPuzzle + 1}`
+    );
+
+
+    // --------------------------------------------------
+    // Question
+    // --------------------------------------------------
+
+    setElementText(
+        "puzzleQuestion",
+        question.questionText
+    );
+
+
+    // --------------------------------------------------
+    // Current backend score
+    // --------------------------------------------------
+
+    setElementText(
+        "currentScore",
         localStorage.getItem(
             "fedEscapeScore"
-        );
+        ) || "0"
+    );
+
+
+    // --------------------------------------------------
+    // Progress
+    // --------------------------------------------------
 
     const progress =
-        Math.round(
-            (
-                (currentPuzzle + 1) /
-                room.puzzles.length
-            ) * 100
+        questions.length > 0
+            ? Math.round(
+                (
+                    currentPuzzle /
+                    questions.length
+                ) * 100
+            )
+            : 0;
+
+
+    const progressFill =
+        document.getElementById(
+            "progressFill"
         );
 
-    document.getElementById(
-        "progressFill"
-    ).style.width =
-        progress + "%";
 
-    document.getElementById(
-        "progressText"
-    ).textContent =
-        progress + "% Complete";
+    if (progressFill) {
 
-    renderAnswerInput(puzzle);
+        progressFill.style.width =
+            `${progress}%`;
+    }
+
+
+    setElementText(
+        "progressText",
+        `${progress}% Complete`
+    );
+
+
+    // --------------------------------------------------
+    // Render input
+    // --------------------------------------------------
+
+    renderAnswerInput(
+        question
+    );
+
+
+    // --------------------------------------------------
+    // Clear previous feedback
+    // --------------------------------------------------
 
     const message =
         document.getElementById(
             "puzzleMessage"
         );
 
-    message.textContent = "";
-    message.style.color = "";
 
+    if (message) {
+
+        message.textContent =
+            "";
+
+        message.style.color =
+            "";
+    }
 }
 
 
-function renderAnswerInput(puzzle) {
+// ======================================================
+// RENDER ANSWER INPUT
+// ======================================================
+
+function renderAnswerInput(question) {
 
     const answerOptions =
         document.getElementById(
             "answerOptions"
         );
 
-    answerOptions.innerHTML = "";
 
-    /*
-        MULTIPLE-CHOICE QUESTION
-    */
+    if (!answerOptions) {
+
+        return;
+    }
+
+
+    answerOptions.innerHTML =
+        "";
+
+
+    const questionType =
+        question.questionType;
+
+
+    // ==================================================
+    // MULTIPLE CHOICE
+    // ==================================================
+
     if (
-        puzzle.type ===
+        questionType ===
         "multiple-choice"
     ) {
 
-        puzzle.options.forEach(
+        const options =
+            Array.isArray(
+                question.options
+            )
+                ? question.options
+                : [];
+
+
+        options.forEach(
             (option) => {
 
                 const label =
@@ -252,192 +816,188 @@ function renderAnswerInput(puzzle) {
                         "label"
                     );
 
+
                 label.className =
                     "answer-option";
+
 
                 const input =
                     document.createElement(
                         "input"
                     );
 
-                input.type = "radio";
-                input.name = "answer";
-                input.value = option;
 
-                label.appendChild(input);
+                input.type =
+                    "radio";
+
+                input.name =
+                    "answer";
+
+                input.value =
+                    option;
+
+
+                label.appendChild(
+                    input
+                );
+
 
                 label.appendChild(
                     document.createTextNode(
-                        " " + option
+                        ` ${option}`
                     )
                 );
+
 
                 answerOptions.appendChild(
                     label
                 );
-
             }
         );
 
-        return;
 
+        return;
     }
 
 
-    /*
-        TEXT-ENTRY QUESTION
-    */
-    if (puzzle.type === "text") {
+    // ==================================================
+    // TRUE / FALSE
+    // ==================================================
+
+    if (
+        questionType ===
+        "true-false"
+    ) {
+
+        const options =
+            (
+                Array.isArray(
+                    question.options
+                ) &&
+                question.options.length > 0
+            )
+                ? question.options
+                : [
+                    "True",
+                    "False"
+                ];
+
+
+        options.forEach(
+            (option) => {
+
+                const label =
+                    document.createElement(
+                        "label"
+                    );
+
+
+                label.className =
+                    "answer-option";
+
+
+                const input =
+                    document.createElement(
+                        "input"
+                    );
+
+
+                input.type =
+                    "radio";
+
+                input.name =
+                    "answer";
+
+                input.value =
+                    option;
+
+
+                label.appendChild(
+                    input
+                );
+
+
+                label.appendChild(
+                    document.createTextNode(
+                        ` ${option}`
+                    )
+                );
+
+
+                answerOptions.appendChild(
+                    label
+                );
+            }
+        );
+
+
+        return;
+    }
+
+
+    // ==================================================
+    // TEXT ENTRY
+    // ==================================================
+
+    if (
+        questionType ===
+        "text"
+    ) {
 
         const input =
             document.createElement(
                 "input"
             );
 
-        input.type = "text";
-        input.id = "textAnswer";
-        input.name = "answer";
+
+        input.type =
+            "text";
+
+        input.id =
+            "textAnswer";
+
+        input.name =
+            "answer";
+
         input.placeholder =
             "Enter your answer";
 
-        input.autocomplete = "off";
+        input.autocomplete =
+            "off";
+
 
         answerOptions.appendChild(
             input
         );
 
+
         input.focus();
 
+
+        return;
     }
 
+
+    // --------------------------------------------------
+    // Unsupported question type
+    // --------------------------------------------------
+
+    answerOptions.textContent =
+        "Unsupported question type.";
 }
 
 
-function submitAnswer(room) {
+// ======================================================
+// GET STUDENT ANSWER
+// ======================================================
 
-    const puzzleIndex =
-        Number(
-            localStorage.getItem(
-                "fedEscapeCurrentPuzzle"
-            )
-        );
+function getUserAnswer(question) {
 
-    const puzzle =
-        room.puzzles[puzzleIndex];
-
-    const message =
-        document.getElementById(
-            "puzzleMessage"
-        );
-
-    const userAnswer =
-        getUserAnswer(puzzle);
-
-    if (!userAnswer) {
-
-        message.style.color =
-            "#ff5a5a";
-
-        message.textContent =
-            "Please enter or choose an answer.";
-
-        return;
-
-    }
-
-    const isCorrect =
-        checkAnswer(
-            userAnswer,
-            puzzle.correctAnswer
-        );
-
-    /*
-        INCORRECT ANSWER
-    */
-    if (!isCorrect) {
-
-        message.style.color =
-            "#ff5a5a";
-
-        message.textContent =
-            "❌ Incorrect. Please try again.";
-
-        return;
-
-    }
-
-
-    /*
-        CORRECT ANSWER
-    */
-    message.style.color =
-        "#4CAF50";
-
-    message.textContent =
-        "✅ Correct! " +
-        puzzle.explanation;
-
-    const score =
-        Number(
-            localStorage.getItem(
-                "fedEscapeScore"
-            )
-        );
-
-    const correct =
-        Number(
-            localStorage.getItem(
-                "fedEscapeCorrectAnswers"
-            )
-        );
-
-    const updatedScore =
-        score + puzzle.points;
-
-    localStorage.setItem(
-        "fedEscapeScore",
-        updatedScore.toString()
-    );
-
-    localStorage.setItem(
-        "fedEscapeCorrectAnswers",
-        (correct + 1).toString()
-    );
-
-    localStorage.setItem(
-        "fedEscapeCurrentPuzzle",
-        (puzzleIndex + 1).toString()
-    );
-
-    document.getElementById(
-        "currentScore"
-    ).textContent =
-        updatedScore;
-
-    /*
-        Wait briefly so the player can read
-        the correct-answer feedback.
-    */
-    setTimeout(
-        () => {
-
-            renderPuzzle(room);
-
-        },
-        1200
-    );
-
-}
-
-
-function getUserAnswer(puzzle) {
-
-    /*
-        MULTIPLE CHOICE
-    */
     if (
-        puzzle.type ===
-        "multiple-choice"
+        question.questionType ===
+        "multiple-choice" ||
+        question.questionType ===
+        "true-false"
     ) {
 
         const selected =
@@ -445,134 +1005,968 @@ function getUserAnswer(puzzle) {
                 'input[name="answer"]:checked'
             );
 
+
         if (!selected) {
+
             return "";
         }
 
-        return selected.value;
 
+        return selected.value;
     }
 
 
-    /*
-        TEXT ENTRY
-    */
-    if (puzzle.type === "text") {
+    if (
+        question.questionType ===
+        "text"
+    ) {
 
         const textInput =
             document.getElementById(
                 "textAnswer"
             );
 
+
         if (!textInput) {
+
             return "";
         }
 
-        return textInput.value.trim();
 
+        return textInput.value.trim();
     }
 
-    return "";
 
+    return "";
 }
 
 
-/*
-    Normalise answers before comparison.
+// ======================================================
+// SUBMIT ANSWER
+//
+// PATCH /api/attempts/:attemptId/answer
+//
+// Backend is responsible for:
+// - correctness
+// - points
+// - score
+// - feedback
+// ======================================================
 
-    For example:
+async function submitAnswer(room) {
 
-    HELLO
-    hello
-    Hello
+    if (
+        answerSubmitting ||
+        missionCompleting
+    ) {
 
-    are all treated as the same answer.
-*/
-function checkAnswer(
-    userAnswer,
-    correctAnswer
+        return;
+    }
+
+
+    const token =
+        localStorage.getItem(
+            "fedEscapeToken"
+        );
+
+
+    const attemptId =
+        localStorage.getItem(
+            "fedEscapeAttemptId"
+        );
+
+
+    if (!token) {
+
+        alert(
+            "Your login session is missing. Please log in again."
+        );
+
+
+        return;
+    }
+
+
+    if (!attemptId) {
+
+        alert(
+            "No active attempt was found. Please return to the dashboard and start the room again."
+        );
+
+
+        return;
+    }
+
+
+    const puzzleIndex =
+        Number(
+            localStorage.getItem(
+                "fedEscapeCurrentPuzzle"
+            ) || 0
+        );
+
+
+    const question =
+        room.questions[
+            puzzleIndex
+        ];
+
+
+    if (!question) {
+
+        await completeMission(
+            room
+        );
+
+
+        return;
+    }
+
+
+    const message =
+        document.getElementById(
+            "puzzleMessage"
+        );
+
+
+    const userAnswer =
+        getUserAnswer(
+            question
+        );
+
+
+    if (!userAnswer) {
+
+        if (message) {
+
+            message.style.color =
+                "#ff5a5a";
+
+
+            message.textContent =
+                "Please enter or choose an answer.";
+        }
+
+
+        return;
+    }
+
+
+    answerSubmitting =
+        true;
+
+
+    const submitButton =
+        document.querySelector(
+            '#puzzleForm button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+
+        submitButton.disabled =
+            true;
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `${GAME_API_BASE_URL}/attempts/${attemptId}/answer`,
+            {
+                method: "PATCH",
+
+                headers: {
+
+                    "Authorization":
+                        `Bearer ${token}`,
+
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    questionId:
+                        question._id,
+
+                    answer:
+                        userAnswer,
+
+                    hintUsed:
+                        false
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            console.error(
+                "Answer submission failed:",
+                data
+            );
+
+
+            if (message) {
+
+                message.style.color =
+                    "#ff5a5a";
+
+
+                message.textContent =
+                    data.message ||
+                    "Unable to submit answer.";
+            }
+
+
+            return;
+        }
+
+
+        const result =
+            data.result;
+
+
+        if (!result) {
+
+            console.error(
+                "Answer result missing:",
+                data
+            );
+
+
+            return;
+        }
+
+
+        // --------------------------------------------------
+        // Backend score is source of truth.
+        // --------------------------------------------------
+
+        localStorage.setItem(
+            "fedEscapeScore",
+            String(
+                result.score || 0
+            )
+        );
+
+
+        // --------------------------------------------------
+        // Update frontend correct-answer count.
+        // --------------------------------------------------
+
+        let correctAnswers =
+            Number(
+                localStorage.getItem(
+                    "fedEscapeCorrectAnswers"
+                ) || 0
+            );
+
+
+        if (
+            result.isCorrect
+        ) {
+
+            correctAnswers +=
+                1;
+
+
+            localStorage.setItem(
+                "fedEscapeCorrectAnswers",
+                String(
+                    correctAnswers
+                )
+            );
+        }
+
+
+        // --------------------------------------------------
+        // Backend records both correct and incorrect
+        // submissions, therefore advance after every
+        // successful submission.
+        // --------------------------------------------------
+
+        const nextQuestion =
+            puzzleIndex + 1;
+
+
+        localStorage.setItem(
+            "fedEscapeCurrentPuzzle",
+            String(
+                nextQuestion
+            )
+        );
+
+
+        setElementText(
+            "currentScore",
+            String(
+                result.score || 0
+            )
+        );
+
+
+        // --------------------------------------------------
+        // Backend feedback
+        // --------------------------------------------------
+
+        if (message) {
+
+            if (
+                result.isCorrect
+            ) {
+
+                message.style.color =
+                    "#4CAF50";
+
+
+                message.textContent =
+                    "✅ " +
+                    (
+                        result.feedback ||
+                        "Correct!"
+                    );
+
+            } else {
+
+                message.style.color =
+                    "#ff5a5a";
+
+
+                message.textContent =
+                    "❌ " +
+                    (
+                        result.feedback ||
+                        "Incorrect."
+                    );
+            }
+        }
+
+
+        console.log(
+            "Answer submitted:",
+            result
+        );
+
+
+        // --------------------------------------------------
+        // Wait so student can read feedback.
+        // --------------------------------------------------
+
+        setTimeout(
+            async () => {
+
+                if (
+                    nextQuestion >=
+                    room.questions.length
+                ) {
+
+                    await completeMission(
+                        room
+                    );
+
+                } else {
+
+                    renderPuzzle(
+                        room
+                    );
+                }
+
+            },
+            1500
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Submit answer error:",
+            error
+        );
+
+
+        if (message) {
+
+            message.style.color =
+                "#ff5a5a";
+
+
+            message.textContent =
+                "Unable to connect to the FedEscape server.";
+        }
+
+    } finally {
+
+        answerSubmitting =
+            false;
+
+
+        if (submitButton) {
+
+            submitButton.disabled =
+                false;
+        }
+    }
+}
+
+
+// ======================================================
+// COMPLETE ATTEMPT
+//
+// PATCH /api/attempts/:attemptId/complete
+// ======================================================
+
+async function completeMission(room) {
+
+    // --------------------------------------------------
+    // FIX #1
+    //
+    // Prevent multiple calls while the completion
+    // request is already running.
+    // --------------------------------------------------
+
+    if (missionCompleting) {
+
+        return;
+    }
+
+
+    // --------------------------------------------------
+    // Already successfully completed in this page state.
+    // --------------------------------------------------
+
+    const alreadyCompleted =
+        localStorage.getItem(
+            "fedEscapeCompleted"
+        );
+
+
+    if (
+        alreadyCompleted === "true"
+    ) {
+
+        showCompletion(
+            room,
+            null
+        );
+
+
+        return;
+    }
+
+
+    const token =
+        localStorage.getItem(
+            "fedEscapeToken"
+        );
+
+
+    const attemptId =
+        localStorage.getItem(
+            "fedEscapeAttemptId"
+        );
+
+
+    if (
+        !token ||
+        !attemptId
+    ) {
+
+        console.error(
+            "Cannot complete mission: authentication or attempt ID missing."
+        );
+
+
+        return;
+    }
+
+
+    // --------------------------------------------------
+    // Lock completion before the request begins.
+    // --------------------------------------------------
+
+    missionCompleting =
+        true;
+
+
+    try {
+
+        const response = await fetch(
+            `${GAME_API_BASE_URL}/attempts/${attemptId}/complete`,
+            {
+                method: "PATCH",
+
+                headers: {
+
+                    "Authorization":
+                        `Bearer ${token}`,
+
+                    "Content-Type":
+                        "application/json"
+                }
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            console.error(
+                "Mission completion failed:",
+                data
+            );
+
+
+            const message =
+                document.getElementById(
+                    "puzzleMessage"
+                );
+
+
+            if (message) {
+
+                message.style.color =
+                    "#ff5a5a";
+
+
+                message.textContent =
+                    data.message ||
+                    "Unable to complete the mission.";
+            }
+
+
+            // Allow retry only when completion genuinely failed.
+            missionCompleting =
+                false;
+
+
+            return;
+        }
+
+
+        // --------------------------------------------------
+        // Completion succeeded.
+        // --------------------------------------------------
+
+        localStorage.setItem(
+            "fedEscapeCompleted",
+            "true"
+        );
+
+
+        if (data.result) {
+
+            localStorage.setItem(
+                "fedEscapeScore",
+                String(
+                    data.result.score || 0
+                )
+            );
+
+
+            localStorage.setItem(
+                "fedEscapeMaximumScore",
+                String(
+                    data.result.maximumScore || 0
+                )
+            );
+
+
+            localStorage.setItem(
+                "fedEscapeScorePercentage",
+                String(
+                    data.result.scorePercentage || 0
+                )
+            );
+        }
+
+
+        console.log(
+            "Mission completed:",
+            data
+        );
+
+
+        showCompletion(
+            room,
+            data.result
+        );
+
+
+        // IMPORTANT:
+        // Do not reset missionCompleting here.
+        // The mission is now permanently complete
+        // for this attempt.
+
+    } catch (error) {
+
+        console.error(
+            "Complete mission error:",
+            error
+        );
+
+
+        // Network error can be retried.
+        missionCompleting =
+            false;
+    }
+}
+
+
+// ======================================================
+// SHOW COMPLETION SCREEN
+// ======================================================
+
+function showCompletion(
+    room,
+    completionResult
 ) {
 
-    return (
-        String(userAnswer)
-            .trim()
-            .toLowerCase() ===
+    // --------------------------------------------------
+    // Completed mission always displays 100%.
+    // --------------------------------------------------
 
-        String(correctAnswer)
-            .trim()
-            .toLowerCase()
+    const progressFill =
+        document.getElementById(
+            "progressFill"
+        );
+
+
+    if (progressFill) {
+
+        progressFill.style.width =
+            "100%";
+    }
+
+
+    setElementText(
+        "progressText",
+        "100% Complete"
     );
 
-}
+
+    // --------------------------------------------------
+    // HUD
+    // --------------------------------------------------
+
+    setElementText(
+        "puzzleProgress",
+        `Puzzle ${room.questions.length} of ${room.questions.length}`
+    );
 
 
-function showCompletion(room) {
+    // --------------------------------------------------
+    // Stop timer
+    // --------------------------------------------------
 
-    stopGameTimer();
+    if (
+        typeof stopGameTimer ===
+        "function"
+    ) {
+
+        stopGameTimer();
+    }
+
 
     localStorage.setItem(
         "fedEscapeCompleted",
         "true"
     );
 
-    document.getElementById(
+
+    // --------------------------------------------------
+    // Hide question UI
+    // --------------------------------------------------
+
+    hideElement(
         "puzzleCategory"
-    ).hidden = true;
+    );
 
-    document.getElementById(
+
+    hideElement(
         "puzzleTitle"
-    ).hidden = true;
+    );
 
-    document.getElementById(
+
+    hideElement(
         "puzzleQuestion"
-    ).hidden = true;
+    );
 
-    document.getElementById(
+
+    hideElement(
         "puzzleForm"
-    ).hidden = true;
+    );
 
-    document.getElementById(
-        "completionScreen"
-    ).hidden = false;
 
-    document.getElementById(
-        "finalScore"
-    ).textContent =
-        localStorage.getItem(
-            "fedEscapeScore"
+    // --------------------------------------------------
+    // Show completion screen
+    // --------------------------------------------------
+
+    const completionScreen =
+        document.getElementById(
+            "completionScreen"
         );
 
-    document.getElementById(
-        "finalCorrectAnswers"
-    ).textContent =
-        localStorage.getItem(
-            "fedEscapeCorrectAnswers"
+
+    if (completionScreen) {
+
+        completionScreen.hidden =
+            false;
+    }
+
+
+    // ==================================================
+    // FIX #2
+    // DYNAMIC ROOM COMPLETION TITLE
+    // ==================================================
+
+    setElementText(
+        "completionTitle",
+        `🎉 ${room.name || "Mission"} Complete`
+    );
+
+
+    // ==================================================
+    // DYNAMIC MONGODB COMPLETION MESSAGE
+    // ==================================================
+
+    const completionMessage =
+        room.completionMessage ||
+        "Mission completed successfully.";
+
+
+    setElementText(
+        "completionMessage",
+        completionMessage
+    );
+
+
+    // ==================================================
+    // FINAL SCORE
+    // ==================================================
+
+    const finalScore =
+        completionResult?.score ??
+        Number(
+            localStorage.getItem(
+                "fedEscapeScore"
+            ) || 0
+        );
+
+
+    setElementText(
+        "finalScore",
+        String(
+            finalScore
         )
-        + " / "
-        + room.puzzles.length;
+    );
 
-    document.getElementById(
-        "finalTime"
-    ).textContent =
-        formatGameTime(
-            Number(
-                localStorage.getItem(
-                    "fedEscapeTimeRemaining"
-                )
-            )
+
+    // Also ensure HUD displays final score.
+    setElementText(
+        "currentScore",
+        String(
+            finalScore
+        )
+    );
+
+
+    // ==================================================
+    // CORRECT ANSWERS
+    // ==================================================
+
+    const correctAnswers =
+        Number(
+            localStorage.getItem(
+                "fedEscapeCorrectAnswers"
+            ) || 0
         );
 
-    /*
-        Save the completed result using
-        the existing results.js functionality.
-    */
+
+    setElementText(
+        "finalCorrectAnswers",
+        `${correctAnswers} / ${room.questions.length}`
+    );
+
+
+    // ==================================================
+    // TIME REMAINING
+    // ==================================================
+
+    const remainingTime =
+        Number(
+            localStorage.getItem(
+                "fedEscapeTimeRemaining"
+            ) || 0
+        );
+
+
     if (
-        typeof saveFedEscapeResult ===
+        typeof formatGameTime ===
         "function"
     ) {
 
-        saveFedEscapeResult(room);
+        setElementText(
+            "finalTime",
+            formatGameTime(
+                remainingTime
+            )
+        );
 
+    } else {
+
+        setElementText(
+            "finalTime",
+            String(
+                remainingTime
+            )
+        );
+    }
+}
+
+
+// ======================================================
+// RESTART MISSION
+// ======================================================
+
+async function restartMission(room) {
+
+    const confirmed =
+        window.confirm(
+            "Restart this mission?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
     }
 
+
+    const roomId =
+        room._id;
+
+
+    if (!roomId) {
+
+        alert(
+            "Unable to identify this escape room."
+        );
+
+
+        return;
+    }
+
+
+    // --------------------------------------------------
+    // Clear old frontend attempt state.
+    // --------------------------------------------------
+
+    localStorage.removeItem(
+        "fedEscapeAttemptId"
+    );
+
+
+    localStorage.setItem(
+        "fedEscapeCurrentPuzzle",
+        "0"
+    );
+
+
+    localStorage.setItem(
+        "fedEscapeScore",
+        "0"
+    );
+
+
+    localStorage.setItem(
+        "fedEscapeCorrectAnswers",
+        "0"
+    );
+
+
+    localStorage.setItem(
+        "fedEscapeCompleted",
+        "false"
+    );
+
+
+    localStorage.setItem(
+        "fedEscapeTimeRemaining",
+        String(
+            Number(
+                room.time
+            ) * 60
+        )
+    );
+
+
+    // Allow completion for the next attempt.
+    missionCompleting =
+        false;
+
+
+    // --------------------------------------------------
+    // Backend creates a new attempt when the previous
+    // attempt has already completed.
+    // --------------------------------------------------
+
+    const started =
+        await startNewMission(
+            roomId
+        );
+
+
+    if (started) {
+
+        window.location.reload();
+    }
+}
+
+
+// ======================================================
+// HELPER FUNCTIONS
+// ======================================================
+
+function setElementText(
+    elementId,
+    text
+) {
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            text;
+    }
+}
+
+
+function hideElement(
+    elementId
+) {
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
+
+    if (element) {
+
+        element.hidden =
+            true;
+    }
 }

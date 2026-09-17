@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
 
@@ -10,30 +11,18 @@
 
     <title>Student Results | FedEscape</title>
 
-    <link rel="stylesheet" href="css/style.css">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-
     <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet"
+        href="css/style.css"
     >
 
     <style>
 
-        /* Add professional spacing between each results section */
         .dashboard-section {
             margin-top: 55px;
             margin-bottom: 55px;
         }
 
-        /* Completed Rooms table */
         .results-table-container {
             margin-top: 20px;
             overflow-x: auto;
@@ -44,70 +33,101 @@
             border-collapse: collapse;
         }
 
-        /* Add space between table columns */
         .results-table th,
         .results-table td {
-            padding: 18px 30px;
+            padding: 18px 25px;
             text-align: left;
             vertical-align: middle;
         }
 
-        /* Make headings easier to read */
         .results-table th {
             white-space: nowrap;
             font-weight: 600;
         }
 
-        /* Add separation between result rows */
         .results-table td {
-            border-bottom: 1px solid #e5e5e5;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         }
 
-        /* More space before Rankings / Leaderboard */
+        .status-completed {
+            font-weight: 600;
+        }
+
+        .leaderboard-controls {
+            margin-top: 20px;
+            margin-bottom: 25px;
+        }
+
+        .leaderboard-controls label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .leaderboard-controls select {
+            width: 100%;
+            max-width: 450px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font: inherit;
+        }
+
         .leaderboard-card {
             margin-top: 25px;
         }
 
-        /* Leaderboard headings and rows */
         .leaderboard-heading,
         .leaderboard-row {
             display: grid;
-            grid-template-columns: 100px minmax(180px, 1fr) 150px 150px;
-            column-gap: 35px;
+            grid-template-columns:
+                80px
+                minmax(180px, 1fr)
+                140px
+                120px
+                120px;
+
+            column-gap: 25px;
             align-items: center;
-            padding: 18px 30px;
+            padding: 18px 25px;
         }
 
-        /* Leaderboard heading */
         .leaderboard-heading {
             font-weight: 600;
         }
 
-        /* Separate each leaderboard result */
         .leaderboard-row {
-            border-bottom: 1px solid #e5e5e5;
+            border-bottom:
+                1px solid rgba(255, 255, 255, 0.12);
         }
 
-        /* Give the leaderboard extra room at the bottom */
-        #leaderboardList {
-            margin-bottom: 10px;
+        .results-loading {
+            padding: 25px 0;
         }
 
-        /* Mobile/tablet support */
-        @media (max-width: 768px) {
+        .results-error {
+            padding: 20px;
+            margin-top: 20px;
+        }
 
-            .results-table th,
-            .results-table td {
-                padding: 14px 18px;
+        #resultsErrorMessage {
+            display: none;
+        }
+
+        #noResultsMessage,
+        #noLeaderboardMessage {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+
+            .leaderboard-card {
+                overflow-x: auto;
             }
 
             .leaderboard-heading,
             .leaderboard-row {
-                grid-template-columns: 60px minmax(120px, 1fr) 80px 80px;
-                column-gap: 15px;
-                padding: 15px;
+                min-width: 700px;
             }
-
         }
 
     </style>
@@ -117,6 +137,10 @@
 
 <body class="dashboard-page">
 
+
+<!-- ==================================================
+     HEADER
+=================================================== -->
 
 <header class="dashboard-header">
 
@@ -137,11 +161,13 @@
                     Dashboard
                 </a>
             </li>
-           </li> 
-<a href="dashboard.html#available-rooms">
-            Rooms
-        </a>
-    </li>
+
+            <li>
+                <a href="dashboard.html#available-rooms">
+                    Rooms
+                </a>
+            </li>
+
             <li>
                 <a
                     href="results.html"
@@ -152,7 +178,10 @@
             </li>
 
             <li>
-                <a href="index.html">
+                <a
+                    href="#"
+                    id="logoutButton"
+                >
                     Logout
                 </a>
             </li>
@@ -164,8 +193,16 @@
 </header>
 
 
+<!-- ==================================================
+     MAIN
+=================================================== -->
+
 <main class="dashboard-main">
 
+
+    <!-- ==================================================
+         RESULTS HEADER
+    =================================================== -->
 
     <section class="results-header">
 
@@ -178,13 +215,27 @@
         </h1>
 
         <p>
-            View your completed rooms,
-            scores, progress and leaderboard.
+            View your completed escape rooms,
+            scores, progress and leaderboard rankings.
         </p>
 
     </section>
 
 
+    <!-- ==================================================
+         ERROR MESSAGE
+    =================================================== -->
+
+    <div
+        id="resultsErrorMessage"
+        class="results-error"
+    >
+    </div>
+
+
+    <!-- ==================================================
+         PROGRESS SUMMARY
+    =================================================== -->
 
     <section class="dashboard-section">
 
@@ -211,11 +262,11 @@
             <div class="results-summary-card">
 
                 <h3 id="roomsCompleted">
-                    0
+                    -
                 </h3>
 
                 <p>
-                    Rooms Completed
+                    Completed Attempts
                 </p>
 
             </div>
@@ -224,7 +275,7 @@
             <div class="results-summary-card">
 
                 <h3 id="totalScore">
-                    0
+                    -
                 </h3>
 
                 <p>
@@ -236,22 +287,24 @@
 
             <div class="results-summary-card">
 
-                <h3 id="bestScore">
-                    0
+                <h3 id="bestPercentage">
+                    -
                 </h3>
 
                 <p>
-                    Best Score
+                    Best Percentage
                 </p>
 
             </div>
-
 
         </div>
 
     </section>
 
 
+    <!-- ==================================================
+         COMPLETED ATTEMPTS
+    =================================================== -->
 
     <section class="dashboard-section">
 
@@ -275,14 +328,30 @@
         <div class="results-table-container">
 
 
-            <table class="results-table">
+            <p
+                id="resultsLoadingMessage"
+                class="results-loading"
+            >
+                Loading your results...
+            </p>
+
+
+            <table
+                id="resultsTable"
+                class="results-table"
+                hidden
+            >
 
                 <thead>
 
                     <tr>
 
                         <th>
-                            Room ID
+                            Room
+                        </th>
+
+                        <th>
+                            Attempt
                         </th>
 
                         <th>
@@ -290,15 +359,19 @@
                         </th>
 
                         <th>
-                            Completion Time
+                            Percentage
                         </th>
 
                         <th>
-                            Progress Status
+                            Time
                         </th>
 
                         <th>
-                            Completion Date
+                            Status
+                        </th>
+
+                        <th>
+                            Completed
                         </th>
 
                     </tr>
@@ -307,7 +380,6 @@
 
 
                 <tbody id="resultsTableBody">
-
                 </tbody>
 
             </table>
@@ -323,8 +395,8 @@
                 </h3>
 
                 <p>
-                    Complete an escape room
-                    to see your results here.
+                    Complete an escape room to
+                    see your results here.
                 </p>
 
                 <a
@@ -336,12 +408,14 @@
 
             </div>
 
-
         </div>
 
     </section>
 
 
+    <!-- ==================================================
+         LEADERBOARD
+    =================================================== -->
 
     <section class="dashboard-section">
 
@@ -354,15 +428,38 @@
                 </p>
 
                 <h2>
-                    Leaderboard
+                    Room Leaderboard
                 </h2>
+
+                <p>
+                    Select a completed room to view
+                    its leaderboard.
+                </p>
 
             </div>
 
         </div>
 
 
+        <div class="leaderboard-controls">
+
+            <label for="leaderboardRoomSelect">
+                Escape Room
+            </label>
+
+            <select id="leaderboardRoomSelect">
+
+                <option value="">
+                    Select a room
+                </option>
+
+            </select>
+
+        </div>
+
+
         <div class="leaderboard-card">
+
 
             <div class="leaderboard-heading">
 
@@ -371,11 +468,15 @@
                 </span>
 
                 <span>
-                    Student ID
+                    Student
                 </span>
 
                 <span>
                     Score
+                </span>
+
+                <span>
+                    Percentage
                 </span>
 
                 <span>
@@ -386,7 +487,6 @@
 
 
             <div id="leaderboardList">
-
             </div>
 
 
@@ -394,10 +494,8 @@
                 id="noLeaderboardMessage"
                 class="no-results-message"
             >
-
-                Complete a room to appear
-                on the leaderboard.
-
+                Select a completed room to view
+                its leaderboard.
             </div>
 
 
@@ -408,6 +506,10 @@
 
 </main>
 
+
+<!-- ==================================================
+     BACKEND RESULTS LOGIC
+=================================================== -->
 
 <script src="js/results.js"></script>
 

@@ -1,297 +1,359 @@
 "use strict";
 
-/*
-    Save a completed room result.
 
-    Later this function can be changed to send the
-    result to /api/results instead of localStorage.
-*/
-function saveFedEscapeResult(room) {
+// ======================================================
+// FedEscape Student Results
+// Backend + MongoDB version
+// ======================================================
 
-    if (!room) {
-        return;
-    }
-
-    /*
-        Prevent the same completed mission
-        from being saved more than once.
-    */
-    const resultSaved =
-        localStorage.getItem("fedEscapeResultSaved");
-
-    if (resultSaved === "true") {
-        return;
-    }
+const RESULTS_API_BASE_URL =
+    "http://localhost:5000/api";
 
 
-    const score =
-        Number(
-            localStorage.getItem("fedEscapeScore")
-        ) || 0;
+let studentResults = [];
 
 
-    const timeRemaining =
-        Number(
-            localStorage.getItem(
-                "fedEscapeTimeRemaining"
-            )
-        ) || 0;
+// ======================================================
+// PAGE INITIALISATION
+// ======================================================
 
-
-    /*
-        Completion time means how long the
-        student actually took to finish.
-    */
-    const completionSeconds =
-        Math.max(
-            0,
-            room.timeLimit - timeRemaining
-        );
-
-
-    const result = {
-
-        studentId:
-            getStudentId(),
-
-        roomId:
-            room.id,
-
-        score:
-            score,
-
-        completionTime:
-            completionSeconds,
-
-        progressStatus:
-            "Completed",
-
-        completionDate:
-            new Date().toISOString()
-
-    };
-
-
-    let results =
-        getFedEscapeResults();
-
-
-    results.push(result);
-
-
-    localStorage.setItem(
-        "fedEscapeResults",
-        JSON.stringify(results)
-    );
-
-
-    localStorage.setItem(
-        "fedEscapeResultSaved",
-        "true"
-    );
-
-
-    console.log(
-        "FedEscape result saved:",
-        result
-    );
-
-}
-
-
-/*
-    Get the current student ID.
-
-    When authentication is connected to the backend,
-    this can use the logged-in student's real ID.
-*/
-function getStudentId() {
-
-    return (
-        localStorage.getItem("studentId") ||
-        localStorage.getItem(
-            "fedEscapeStudentId"
-        ) ||
-        "student-demo"
-    );
-
-}
-
-
-/*
-    Read all previously saved results.
-*/
-function getFedEscapeResults() {
-
-    const savedResults =
-        localStorage.getItem(
-            "fedEscapeResults"
-        );
-
-
-    if (!savedResults) {
-        return [];
-    }
-
-
-    try {
-
-        const results =
-            JSON.parse(savedResults);
-
-        return Array.isArray(results)
-            ? results
-            : [];
-
-    } catch (error) {
-
-        console.error(
-            "Unable to read results:",
-            error
-        );
-
-        return [];
-
-    }
-
-}
-
-
-/*
-    Convert seconds to MM:SS.
-*/
-function formatCompletionTime(
-    totalSeconds
-) {
-
-    totalSeconds =
-        Math.max(
-            0,
-            Number(totalSeconds) || 0
-        );
-
-
-    const minutes =
-        Math.floor(
-            totalSeconds / 60
-        );
-
-
-    const seconds =
-        totalSeconds % 60;
-
-
-    return (
-        String(minutes).padStart(2, "0")
-        +
-        ":"
-        +
-        String(seconds).padStart(2, "0")
-    );
-
-}
-
-
-/*
-    Everything below this point is only used
-    when results.html is open.
-*/
 document.addEventListener(
     "DOMContentLoaded",
-    () => {
+    async () => {
 
-        const resultsTable =
+        const resultsTableBody =
             document.getElementById(
                 "resultsTableBody"
             );
 
-        /*
-            If we are not on results.html,
-            don't try to display anything.
-        */
-        if (!resultsTable) {
+
+        // results.js should only execute its results
+        // functionality on results.html.
+        if (!resultsTableBody) {
+
             return;
         }
 
 
-        displayProgressSummary();
-        displayResults();
-        displayLeaderboard();
+        setupLogout();
 
+
+        const authenticated =
+            checkStudentAuthentication();
+
+
+        if (!authenticated) {
+
+            return;
+        }
+
+
+        setupLeaderboardSelector();
+
+
+        await loadStudentResults();
     }
 );
 
 
-/*
-    Progress summary.
-*/
-function displayProgressSummary() {
+// ======================================================
+// CHECK LOGIN
+// ======================================================
 
-    const results =
-        getFedEscapeResults();
+function checkStudentAuthentication() {
 
-
-    const completed =
-        results.filter(
-            result =>
-                result.progressStatus
-                === "Completed"
+    const token =
+        localStorage.getItem(
+            "fedEscapeToken"
         );
 
 
-    const roomsCompleted =
-        completed.length;
-
-
-    const totalScore =
-        completed.reduce(
-            (total, result) =>
-                total +
-                Number(result.score || 0),
-            0
+    const role =
+        localStorage.getItem(
+            "fedEscapeUserRole"
         );
 
 
-    const bestScore =
-        completed.length > 0
-            ? Math.max(
-                ...completed.map(
-                    result =>
-                        Number(
-                            result.score || 0
-                        )
-                )
-            )
-            : 0;
+    if (!token) {
+
+        alert(
+            "Please log in to view your results."
+        );
 
 
-    setText(
-        "roomsCompleted",
-        roomsCompleted
-    );
+        window.location.href =
+            "login.html";
 
 
-    setText(
-        "totalScore",
-        totalScore
-    );
+        return false;
+    }
 
 
-    setText(
-        "bestScore",
-        bestScore
-    );
+    if (
+        role &&
+        role !== "student"
+    ) {
 
+        alert(
+            "Student results are only available to student accounts."
+        );
+
+
+        window.location.href =
+            "index.html";
+
+
+        return false;
+    }
+
+
+    return true;
 }
 
 
-/*
-    Show saved results.
-*/
-function displayResults() {
+// ======================================================
+// LOAD STUDENT RESULTS
+//
+// GET /api/attempts/my-results
+// ======================================================
 
-    const results =
-        getFedEscapeResults();
+async function loadStudentResults() {
+
+    const token =
+        localStorage.getItem(
+            "fedEscapeToken"
+        );
+
+
+    showLoadingState();
+
+
+    try {
+
+        const response = await fetch(
+            `${RESULTS_API_BASE_URL}/attempts/my-results`,
+            {
+                method: "GET",
+
+                headers: {
+
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            console.error(
+                "Unable to load student results:",
+                data
+            );
+
+
+            showResultsError(
+                data.message ||
+                "Unable to load your results."
+            );
+
+
+            return;
+        }
+
+
+        // --------------------------------------------------
+        // Support the backend response safely.
+        //
+        // Expected response contains an array of attempts.
+        // --------------------------------------------------
+
+        studentResults =
+            extractResultsArray(
+                data
+            );
+
+
+        console.log(
+            "Student results loaded from MongoDB:",
+            studentResults
+        );
+
+
+        hideLoadingState();
+
+
+        renderProgressSummary(
+            studentResults
+        );
+
+
+        renderResultsTable(
+            studentResults
+        );
+
+
+        populateLeaderboardRooms(
+            studentResults
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Student results request failed:",
+            error
+        );
+
+
+        showResultsError(
+            "Unable to connect to the FedEscape server."
+        );
+    }
+}
+
+
+// ======================================================
+// EXTRACT RESULTS ARRAY
+//
+// Allows for common backend response names without
+// changing the backend.
+// ======================================================
+
+function extractResultsArray(data) {
+
+    if (
+        Array.isArray(data)
+    ) {
+
+        return data;
+    }
+
+
+    if (
+        Array.isArray(
+            data.results
+        )
+    ) {
+
+        return data.results;
+    }
+
+
+    if (
+        Array.isArray(
+            data.attempts
+        )
+    ) {
+
+        return data.attempts;
+    }
+
+
+    return [];
+}
+
+
+// ======================================================
+// COMPLETED RESULTS ONLY
+// ======================================================
+
+function getCompletedResults(results) {
+
+    return results.filter(
+        (result) => {
+
+            const status =
+                String(
+                    result.status || ""
+                ).toLowerCase();
+
+
+            return (
+                status === "completed" ||
+                Boolean(
+                    result.completedAt
+                )
+            );
+        }
+    );
+}
+
+
+// ======================================================
+// PROGRESS SUMMARY
+// ======================================================
+
+function renderProgressSummary(results) {
+
+    const completed = getCompletedResults(results);
+
+    // Completed Attempts
+    const completedAttempts = completed.length;
+
+    // Total Score
+    const totalScore = completed.reduce(
+        (total, result) => {
+            return total + Number(result.score || 0);
+        },
+        0
+    );
+
+    // Best Percentage
+    let bestPercentage = 0;
+
+    completed.forEach((result) => {
+
+        const percentage = getScorePercentage(result);
+
+        if (percentage > bestPercentage) {
+            bestPercentage = percentage;
+        }
+    });
+
+    // Find the HTML elements
+    const roomsCompletedElement =
+        document.getElementById("roomsCompleted");
+
+    const totalScoreElement =
+        document.getElementById("totalScore");
+
+    const bestPercentageElement =
+        document.getElementById("bestPercentage");
+
+    // Update the page
+    if (roomsCompletedElement) {
+        roomsCompletedElement.textContent = completedAttempts;
+    }
+
+    if (totalScoreElement) {
+        totalScoreElement.textContent = totalScore;
+    }
+
+    if (bestPercentageElement) {
+        bestPercentageElement.textContent = `${bestPercentage}%`;
+    }
+
+    console.log("Progress summary:", {
+        completedAttempts,
+        totalScore,
+        bestPercentage
+    });
+}
+
+// ======================================================
+// RESULTS TABLE
+// ======================================================
+
+function renderResultsTable(results) {
+
+    const table =
+        document.getElementById(
+            "resultsTable"
+        );
 
 
     const tableBody =
@@ -306,32 +368,82 @@ function displayResults() {
         );
 
 
-    tableBody.innerHTML = "";
-
-
-    if (results.length === 0) {
-
-        if (noResults) {
-            noResults.style.display =
-                "block";
-        }
+    if (
+        !table ||
+        !tableBody
+    ) {
 
         return;
     }
 
 
+    tableBody.innerHTML =
+        "";
+
+
+    const completed =
+        getCompletedResults(
+            results
+        );
+
+
+    // --------------------------------------------------
+    // No results
+    // --------------------------------------------------
+
+    if (
+        completed.length === 0
+    ) {
+
+        table.hidden =
+            true;
+
+
+        if (noResults) {
+
+            noResults.style.display =
+                "block";
+        }
+
+
+        return;
+    }
+
+
+    table.hidden =
+        false;
+
+
     if (noResults) {
+
         noResults.style.display =
             "none";
     }
 
 
+    // --------------------------------------------------
+    // Newest completion first
+    // --------------------------------------------------
+
     const newestFirst =
-        [...results].reverse();
+        [...completed].sort(
+            (a, b) => {
+
+                return (
+                    getDateValue(
+                        b.completedAt
+                    )
+                    -
+                    getDateValue(
+                        a.completedAt
+                    )
+                );
+            }
+        );
 
 
     newestFirst.forEach(
-        result => {
+        (result) => {
 
             const row =
                 document.createElement(
@@ -339,35 +451,129 @@ function displayResults() {
                 );
 
 
+            // --------------------------------------------------
+            // Room
+            // --------------------------------------------------
+
+            const roomName =
+                getRoomName(
+                    result
+                );
+
+
+            // --------------------------------------------------
+            // Attempt number
+            // --------------------------------------------------
+
+            const attemptNumber =
+                Number(
+                    result.attemptNumber || 1
+                );
+
+
+            // --------------------------------------------------
+            // Score
+            // --------------------------------------------------
+
+            const score =
+                Number(
+                    result.score || 0
+                );
+
+
+            const maximumScore =
+                Number(
+                    result.maximumScore || 0
+                );
+
+
+            const scoreText =
+                maximumScore > 0
+                    ? `${score} / ${maximumScore}`
+                    : String(score);
+
+
+            // --------------------------------------------------
+            // Percentage
+            // --------------------------------------------------
+
+            const percentage =
+                getScorePercentage(
+                    result
+                );
+
+
+            // --------------------------------------------------
+            // Duration
+            // --------------------------------------------------
+
+            const duration =
+                getAttemptDuration(
+                    result
+                );
+
+
+            // --------------------------------------------------
+            // Status
+            // --------------------------------------------------
+
+            const status =
+                result.status
+                    ? capitalise(
+                        result.status
+                    )
+                    : "Completed";
+
+
+            // --------------------------------------------------
+            // Completion date
+            // --------------------------------------------------
+
+            const completedDate =
+                formatCompletionDate(
+                    result.completedAt
+                );
+
+
             row.innerHTML = `
 
                 <td>
                     ${escapeHTML(
-                        result.roomId
+                        roomName
                     )}
                 </td>
 
                 <td>
-                    ${Number(
-                        result.score
+                    ${attemptNumber}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        scoreText
                     )}
                 </td>
 
                 <td>
-                    ${formatCompletionTime(
-                        result.completionTime
+                    ${percentage}%
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        formatCompletionTime(
+                            duration
+                        )
+                    )}
+                </td>
+
+                <td class="status-completed">
+                    ${escapeHTML(
+                        status
                     )}
                 </td>
 
                 <td>
                     ${escapeHTML(
-                        result.progressStatus
-                    )}
-                </td>
-
-                <td>
-                    ${formatCompletionDate(
-                        result.completionDate
+                        completedDate
                     )}
                 </td>
 
@@ -377,25 +583,203 @@ function displayResults() {
             tableBody.appendChild(
                 row
             );
-
         }
     );
-
 }
 
 
-/*
-    Leaderboard.
+// ======================================================
+// POPULATE LEADERBOARD ROOM SELECTOR
+// ======================================================
 
-    Higher score wins.
+function populateLeaderboardRooms(results) {
 
-    If scores are equal,
-    faster completion time wins.
-*/
-function displayLeaderboard() {
+    const select =
+        document.getElementById(
+            "leaderboardRoomSelect"
+        );
 
-    const results =
-        getFedEscapeResults();
+
+    if (!select) {
+
+        return;
+    }
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Select a room
+        </option>
+
+    `;
+
+
+    const completed =
+        getCompletedResults(
+            results
+        );
+
+
+    const uniqueRooms =
+        new Map();
+
+
+    completed.forEach(
+        (result) => {
+
+            const roomId =
+                getRoomId(
+                    result
+                );
+
+
+            if (!roomId) {
+
+                return;
+            }
+
+
+            if (
+                !uniqueRooms.has(
+                    roomId
+                )
+            ) {
+
+                uniqueRooms.set(
+                    roomId,
+                    getRoomName(
+                        result
+                    )
+                );
+            }
+        }
+    );
+
+
+    uniqueRooms.forEach(
+        (
+            roomName,
+            roomId
+        ) => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                roomId;
+
+
+            option.textContent =
+                roomName;
+
+
+            select.appendChild(
+                option
+            );
+        }
+    );
+
+
+    // --------------------------------------------------
+    // Automatically show the first completed room's
+    // leaderboard when available.
+    // --------------------------------------------------
+
+    const firstRoom =
+        uniqueRooms.entries().next();
+
+
+    if (
+        !firstRoom.done
+    ) {
+
+        const [
+            firstRoomId
+        ] =
+            firstRoom.value;
+
+
+        select.value =
+            firstRoomId;
+
+
+        loadLeaderboard(
+            firstRoomId
+        );
+
+    } else {
+
+        showNoLeaderboard(
+            "Complete a room to view its leaderboard."
+        );
+    }
+}
+
+
+// ======================================================
+// LEADERBOARD SELECTOR
+// ======================================================
+
+function setupLeaderboardSelector() {
+
+    const select =
+        document.getElementById(
+            "leaderboardRoomSelect"
+        );
+
+
+    if (!select) {
+
+        return;
+    }
+
+
+    select.addEventListener(
+        "change",
+        async () => {
+
+            const roomId =
+                select.value;
+
+
+            if (!roomId) {
+
+                clearLeaderboard();
+
+
+                showNoLeaderboard(
+                    "Select a completed room to view its leaderboard."
+                );
+
+
+                return;
+            }
+
+
+            await loadLeaderboard(
+                roomId
+            );
+        }
+    );
+}
+
+
+// ======================================================
+// LOAD REAL BACKEND LEADERBOARD
+//
+// GET /api/attempts/room/:roomId/leaderboard
+// ======================================================
+
+async function loadLeaderboard(roomId) {
+
+    const token =
+        localStorage.getItem(
+            "fedEscapeToken"
+        );
 
 
     const leaderboard =
@@ -404,138 +788,534 @@ function displayLeaderboard() {
         );
 
 
-    const noLeaderboard =
+    if (!leaderboard) {
+
+        return;
+    }
+
+
+    leaderboard.innerHTML =
+        "<p>Loading leaderboard...</p>";
+
+
+    hideNoLeaderboard();
+
+
+    try {
+
+        const response = await fetch(
+            `${RESULTS_API_BASE_URL}/attempts/room/${roomId}/leaderboard`,
+            {
+                method: "GET",
+
+                headers: {
+
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            console.error(
+                "Unable to load leaderboard:",
+                data
+            );
+
+
+            clearLeaderboard();
+
+
+            showNoLeaderboard(
+                data.message ||
+                "Unable to load this leaderboard."
+            );
+
+
+            return;
+        }
+
+
+        const entries =
+            extractLeaderboardArray(
+                data
+            );
+
+
+        console.log(
+            "Leaderboard loaded from MongoDB:",
+            entries
+        );
+
+
+        renderLeaderboard(
+            entries
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Leaderboard request failed:",
+            error
+        );
+
+
+        clearLeaderboard();
+
+
+        showNoLeaderboard(
+            "Unable to connect to the FedEscape server."
+        );
+    }
+}
+
+
+// ======================================================
+// EXTRACT LEADERBOARD ARRAY
+// ======================================================
+
+function extractLeaderboardArray(data) {
+
+    if (
+        Array.isArray(data)
+    ) {
+
+        return data;
+    }
+
+
+    if (
+        Array.isArray(
+            data.leaderboard
+        )
+    ) {
+
+        return data.leaderboard;
+    }
+
+
+    if (
+        Array.isArray(
+            data.results
+        )
+    ) {
+
+        return data.results;
+    }
+
+
+    return [];
+}
+
+
+// ======================================================
+// RENDER LEADERBOARD
+// ======================================================
+
+function renderLeaderboard(entries) {
+
+    const leaderboard =
         document.getElementById(
-            "noLeaderboardMessage"
+            "leaderboardList"
         );
 
 
     if (!leaderboard) {
+
         return;
     }
 
 
-    leaderboard.innerHTML = "";
+    leaderboard.innerHTML =
+        "";
 
 
-    const completed =
-        results.filter(
-            result =>
-                result.progressStatus
-                === "Completed"
+    if (
+        entries.length === 0
+    ) {
+
+        showNoLeaderboard(
+            "No completed leaderboard entries are available for this room yet."
         );
 
 
-    if (completed.length === 0) {
+        return;
+    }
 
-        if (noLeaderboard) {
-            noLeaderboard.style.display =
-                "block";
+
+    hideNoLeaderboard();
+
+
+    entries.forEach(
+        (entry, index) => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "leaderboard-row";
+
+
+            const rank =
+                Number(
+                    entry.rank ||
+                    index + 1
+                );
+
+
+            const studentName =
+                getLeaderboardStudentName(
+                    entry
+                );
+
+
+            const score =
+                Number(
+                    entry.score || 0
+                );
+
+
+            const maximumScore =
+                Number(
+                    entry.maximumScore || 0
+                );
+
+
+            const scoreText =
+                maximumScore > 0
+                    ? `${score} / ${maximumScore}`
+                    : String(score);
+
+
+            const percentage =
+                getScorePercentage(
+                    entry
+                );
+
+
+            const duration =
+                getAttemptDuration(
+                    entry
+                );
+
+
+            row.innerHTML = `
+
+                <span>
+                    ${rank}
+                </span>
+
+                <span>
+                    ${escapeHTML(
+                        studentName
+                    )}
+                </span>
+
+                <strong>
+                    ${escapeHTML(
+                        scoreText
+                    )}
+                </strong>
+
+                <span>
+                    ${percentage}%
+                </span>
+
+                <span>
+                    ${escapeHTML(
+                        formatCompletionTime(
+                            duration
+                        )
+                    )}
+                </span>
+
+            `;
+
+
+            leaderboard.appendChild(
+                row
+            );
         }
-
-        return;
-    }
-
-
-    if (noLeaderboard) {
-        noLeaderboard.style.display =
-            "none";
-    }
-
-
-    const sorted =
-        [...completed].sort(
-            (a, b) => {
-
-                if (
-                    Number(b.score)
-                    !==
-                    Number(a.score)
-                ) {
-
-                    return (
-                        Number(b.score)
-                        -
-                        Number(a.score)
-                    );
-                }
-
-
-                return (
-                    Number(
-                        a.completionTime
-                    )
-                    -
-                    Number(
-                        b.completionTime
-                    )
-                );
-
-            }
-        );
-
-
-    sorted
-        .slice(0, 10)
-        .forEach(
-            (result, index) => {
-
-                const row =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                row.className =
-                    "leaderboard-row";
-
-
-                row.innerHTML = `
-
-                    <span>
-                        ${index + 1}
-                    </span>
-
-                    <span>
-                        ${escapeHTML(
-                            result.studentId
-                        )}
-                    </span>
-
-                    <strong>
-                        ${Number(
-                            result.score
-                        )}
-                    </strong>
-
-                    <span>
-                        ${formatCompletionTime(
-                            result.completionTime
-                        )}
-                    </span>
-
-                `;
-
-
-                leaderboard.appendChild(
-                    row
-                );
-
-            }
-        );
-
+    );
 }
 
 
-/*
-    Convert ISO date into Australian date.
-*/
-function formatCompletionDate(
-    isoDate
-) {
+// ======================================================
+// GET ROOM ID
+// ======================================================
+
+function getRoomId(result) {
+
+    if (
+        result.room &&
+        typeof result.room === "object"
+    ) {
+
+        return (
+            result.room._id ||
+            result.room.id ||
+            ""
+        );
+    }
+
+
+    return (
+        result.roomId ||
+        result.room ||
+        ""
+    );
+}
+
+
+// ======================================================
+// GET ROOM NAME
+// ======================================================
+
+function getRoomName(result) {
+
+    if (
+        result.room &&
+        typeof result.room === "object"
+    ) {
+
+        return (
+            result.room.name ||
+            "Escape Room"
+        );
+    }
+
+
+    return (
+        result.roomName ||
+        "Escape Room"
+    );
+}
+
+
+// ======================================================
+// SCORE PERCENTAGE
+// ======================================================
+
+function getScorePercentage(result) {
+
+    if (
+        result.scorePercentage !== undefined &&
+        result.scorePercentage !== null
+    ) {
+
+        return Math.round(
+            Number(
+                result.scorePercentage
+            ) || 0
+        );
+    }
+
+
+    const score =
+        Number(
+            result.score || 0
+        );
+
+
+    const maximumScore =
+        Number(
+            result.maximumScore || 0
+        );
+
+
+    if (
+        maximumScore <= 0
+    ) {
+
+        return 0;
+    }
+
+
+    return Math.round(
+        (
+            score /
+            maximumScore
+        ) * 100
+    );
+}
+
+
+// ======================================================
+// ATTEMPT DURATION
+// ======================================================
+
+function getAttemptDuration(result) {
+
+    if (
+        result.durationSeconds !== undefined &&
+        result.durationSeconds !== null
+    ) {
+
+        return Number(
+            result.durationSeconds
+        ) || 0;
+    }
+
+
+    if (
+        result.startedAt &&
+        result.completedAt
+    ) {
+
+        const start =
+            new Date(
+                result.startedAt
+            );
+
+
+        const end =
+            new Date(
+                result.completedAt
+            );
+
+
+        if (
+            !Number.isNaN(
+                start.getTime()
+            ) &&
+            !Number.isNaN(
+                end.getTime()
+            )
+        ) {
+
+            return Math.max(
+                0,
+                Math.round(
+                    (
+                        end.getTime() -
+                        start.getTime()
+                    ) / 1000
+                )
+            );
+        }
+    }
+
+
+    return 0;
+}
+
+
+// ======================================================
+// STUDENT NAME FOR LEADERBOARD
+// ======================================================
+
+function getLeaderboardStudentName(entry) {
+
+    if (
+        entry.student &&
+        typeof entry.student === "object"
+    ) {
+
+        return (
+            entry.student.name ||
+            entry.student.email ||
+            "Student"
+        );
+    }
+
+
+    return (
+        entry.studentName ||
+        entry.studentId ||
+        "Student"
+    );
+}
+
+
+// ======================================================
+// FORMAT DURATION
+// HH:MM:SS WHEN NEEDED
+// ======================================================
+
+function formatCompletionTime(totalSeconds) {
+
+    totalSeconds =
+        Math.max(
+            0,
+            Math.round(
+                Number(
+                    totalSeconds
+                ) || 0
+            )
+        );
+
+
+    const hours =
+        Math.floor(
+            totalSeconds / 3600
+        );
+
+
+    const minutes =
+        Math.floor(
+            (
+                totalSeconds % 3600
+            ) / 60
+        );
+
+
+    const seconds =
+        totalSeconds % 60;
+
+
+    if (
+        hours > 0
+    ) {
+
+        return (
+            String(hours).padStart(2, "0")
+            +
+            ":"
+            +
+            String(minutes).padStart(2, "0")
+            +
+            ":"
+            +
+            String(seconds).padStart(2, "0")
+        );
+    }
+
+
+    return (
+        String(minutes).padStart(2, "0")
+        +
+        ":"
+        +
+        String(seconds).padStart(2, "0")
+    );
+}
+
+
+// ======================================================
+// FORMAT COMPLETION DATE
+// ======================================================
+
+function formatCompletionDate(isoDate) {
+
+    if (!isoDate) {
+
+        return "-";
+    }
+
 
     const date =
-        new Date(isoDate);
+        new Date(
+            isoDate
+        );
 
 
     if (
@@ -543,16 +1323,271 @@ function formatCompletionDate(
             date.getTime()
         )
     ) {
-        return "";
+
+        return "-";
     }
 
 
-    return date.toLocaleDateString(
-        "en-AU"
+    return date.toLocaleString(
+        "en-AU",
+        {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        }
     );
-
 }
 
+
+// ======================================================
+// DATE SORTING
+// ======================================================
+
+function getDateValue(value) {
+
+    const date =
+        new Date(
+            value || 0
+        );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return 0;
+    }
+
+
+    return date.getTime();
+}
+
+
+// ======================================================
+// LOADING STATE
+// ======================================================
+
+function showLoadingState() {
+
+    const loading =
+        document.getElementById(
+            "resultsLoadingMessage"
+        );
+
+
+    if (loading) {
+
+        loading.style.display =
+            "block";
+    }
+
+
+    const table =
+        document.getElementById(
+            "resultsTable"
+        );
+
+
+    if (table) {
+
+        table.hidden =
+            true;
+    }
+
+
+    hideResultsError();
+}
+
+
+function hideLoadingState() {
+
+    const loading =
+        document.getElementById(
+            "resultsLoadingMessage"
+        );
+
+
+    if (loading) {
+
+        loading.style.display =
+            "none";
+    }
+}
+
+
+// ======================================================
+// ERROR STATE
+// ======================================================
+
+function showResultsError(message) {
+
+    hideLoadingState();
+
+
+    const errorElement =
+        document.getElementById(
+            "resultsErrorMessage"
+        );
+
+
+    if (errorElement) {
+
+        errorElement.textContent =
+            message;
+
+
+        errorElement.style.display =
+            "block";
+    }
+}
+
+
+function hideResultsError() {
+
+    const errorElement =
+        document.getElementById(
+            "resultsErrorMessage"
+        );
+
+
+    if (errorElement) {
+
+        errorElement.style.display =
+            "none";
+    }
+}
+
+
+// ======================================================
+// LEADERBOARD EMPTY STATE
+// ======================================================
+
+function clearLeaderboard() {
+
+    const leaderboard =
+        document.getElementById(
+            "leaderboardList"
+        );
+
+
+    if (leaderboard) {
+
+        leaderboard.innerHTML =
+            "";
+    }
+}
+
+
+function showNoLeaderboard(message) {
+
+    const noLeaderboard =
+        document.getElementById(
+            "noLeaderboardMessage"
+        );
+
+
+    if (noLeaderboard) {
+
+        noLeaderboard.textContent =
+            message;
+
+
+        noLeaderboard.style.display =
+            "block";
+    }
+}
+
+
+function hideNoLeaderboard() {
+
+    const noLeaderboard =
+        document.getElementById(
+            "noLeaderboardMessage"
+        );
+
+
+    if (noLeaderboard) {
+
+        noLeaderboard.style.display =
+            "none";
+    }
+}
+
+
+// ======================================================
+// LOGOUT
+// ======================================================
+
+function setupLogout() {
+
+    const logoutButton =
+        document.getElementById(
+            "logoutButton"
+        );
+
+
+    if (!logoutButton) {
+
+        return;
+    }
+
+
+    logoutButton.addEventListener(
+        "click",
+        (event) => {
+
+            event.preventDefault();
+
+
+            localStorage.removeItem(
+                "fedEscapeToken"
+            );
+
+
+            localStorage.removeItem(
+                "fedEscapeLoggedIn"
+            );
+
+
+            localStorage.removeItem(
+                "fedEscapeUserId"
+            );
+
+
+            localStorage.removeItem(
+                "fedEscapeUserName"
+            );
+
+
+            localStorage.removeItem(
+                "fedEscapeUserEmail"
+            );
+
+
+            localStorage.removeItem(
+                "fedEscapeUserRole"
+            );
+
+
+            localStorage.removeItem(
+                "fedEscapeAttemptId"
+            );
+
+
+            window.location.href =
+                "login.html";
+        }
+    );
+}
+
+
+// ======================================================
+// GENERAL HELPERS
+// ======================================================
 
 function setText(
     elementId,
@@ -566,10 +1601,32 @@ function setText(
 
 
     if (element) {
+
         element.textContent =
             value;
     }
+}
 
+
+function capitalise(value) {
+
+    const text =
+        String(
+            value || ""
+        );
+
+
+    if (!text) {
+
+        return "";
+    }
+
+
+    return (
+        text.charAt(0).toUpperCase()
+        +
+        text.slice(1)
+    );
 }
 
 
@@ -582,9 +1639,10 @@ function escapeHTML(value) {
 
 
     element.textContent =
-        String(value ?? "");
+        String(
+            value ?? ""
+        );
 
 
     return element.innerHTML;
-
 }

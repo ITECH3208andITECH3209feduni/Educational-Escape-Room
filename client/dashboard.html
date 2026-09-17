@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -10,9 +12,15 @@
 
     <title>Student Dashboard | FedEscape</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
 
     <link
         rel="preconnect"
@@ -24,48 +32,70 @@
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet"
     >
+
 </head>
 
+
 <body class="dashboard-page">
+
+
+    <!-- ==================================================
+         HEADER / NAVIGATION
+    =================================================== -->
 
     <header class="dashboard-header">
 
         <nav class="navbar dashboard-navbar">
 
-            <a href="dashboard.html" class="dashboard-logo">
+            <a
+                href="dashboard.html"
+                class="dashboard-logo"
+            >
                 FedEscape
             </a>
+
 
             <ul class="nav-links dashboard-nav-links">
 
                 <li>
+
                     <a
                         href="dashboard.html"
                         class="active-nav-link"
                     >
                         Dashboard
                     </a>
+
                 </li>
 
+
                 <li>
+
                     <a href="#available-rooms">
                         Rooms
                     </a>
+
                 </li>
 
-                 <li>
-                <a
-                    href="results.html"
-                    class="active-nav-link"
-                >
-                    Results
-                </a>
-            </li>
 
                 <li>
-                    <a href="index.html">
+
+                    <a href="results.html">
+                        Results
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a
+                        href="index.html"
+                        id="logoutLink"
+                    >
                         Logout
                     </a>
+
                 </li>
 
             </ul>
@@ -74,9 +104,18 @@
 
     </header>
 
+
+
+    <!-- ==================================================
+         MAIN CONTENT
+    =================================================== -->
+
     <main class="dashboard-main">
 
-        <!-- Welcome section -->
+
+        <!-- ==================================================
+             WELCOME SECTION
+        =================================================== -->
 
         <section class="dashboard-welcome">
 
@@ -86,12 +125,22 @@
                     Student Learning Portal
                 </p>
 
-                <h1>Welcome Back!</h1>
+
+                <h1>
+                    Welcome Back!
+                </h1>
+
 
                 <p>
-                    Choose an educational escape room to begin learning.
-                    Your mission progress will be saved while you play.
+
+                    Choose an educational escape room to
+                    begin learning.
+
+                    Your mission progress will be saved
+                    while you play.
+
                 </p>
+
 
                 <a
                     href="#available-rooms"
@@ -104,42 +153,79 @@
 
         </section>
 
-        <!-- Learning path -->
+
+
+        <!-- ==================================================
+             LEARNING PATH
+        =================================================== -->
 
         <section class="dashboard-section">
 
             <div class="section-heading">
 
                 <div>
+
                     <p class="section-label">
                         Your Journey
                     </p>
 
-                    <h2>Current Learning Path</h2>
+                    <h2>
+                        Current Learning Path
+                    </h2>
+
                 </div>
 
-                <span class="section-status">
-                    1 Room Available
+
+                <!--
+                    This value will now be updated
+                    automatically by dashboard.js.
+                -->
+
+                <span
+                    id="availableRoomCount"
+                    class="section-status"
+                >
+                    Loading rooms...
                 </span>
 
             </div>
 
+
+
             <div class="learning-path">
 
-                <div class="learning-path-item active-path-item">
+
+                <!-- Cyber Security -->
+
+                <div
+                    class="learning-path-item active-path-item"
+                >
 
                     <span class="path-indicator">
                         1
                     </span>
 
                     <div>
-                        <h3>Cyber Security</h3>
-                        <p>Available now</p>
+
+                        <h3>
+                            Cyber Security
+                        </h3>
+
+                        <p>
+                            Available now
+                        </p>
+
                     </div>
 
                 </div>
 
+
+
                 <div class="learning-path-line"></div>
+
+
+
+                <!-- Networking -->
 
                 <div class="learning-path-item">
 
@@ -148,13 +234,26 @@
                     </span>
 
                     <div>
-                        <h3>Networking</h3>
-                        <p>Coming next sprint</p>
+
+                        <h3>
+                            Networking
+                        </h3>
+
+                        <p>
+                            Coming next sprint
+                        </p>
+
                     </div>
 
                 </div>
 
+
+
                 <div class="learning-path-line"></div>
+
+
+
+                <!-- Cloud Security -->
 
                 <div class="learning-path-item">
 
@@ -163,13 +262,26 @@
                     </span>
 
                     <div>
-                        <h3>Cloud Security</h3>
-                        <p>Coming next sprint</p>
+
+                        <h3>
+                            Cloud Security
+                        </h3>
+
+                        <p>
+                            Coming next sprint
+                        </p>
+
                     </div>
 
                 </div>
 
+
+
                 <div class="learning-path-line"></div>
+
+
+
+                <!-- Secure Coding -->
 
                 <div class="learning-path-item">
 
@@ -178,17 +290,29 @@
                     </span>
 
                     <div>
-                        <h3>Secure Coding</h3>
-                        <p>Coming next sprint</p>
+
+                        <h3>
+                            Secure Coding
+                        </h3>
+
+                        <p>
+                            Coming next sprint
+                        </p>
+
                     </div>
 
                 </div>
+
 
             </div>
 
         </section>
 
-        <!-- Available room -->
+
+
+        <!-- ==================================================
+             AVAILABLE ESCAPE ROOMS
+        =================================================== -->
 
         <section
             id="available-rooms"
@@ -198,170 +322,66 @@
             <div class="section-heading">
 
                 <div>
+
                     <p class="section-label">
                         Ready to Play
                     </p>
 
-                    <h2>Available Room</h2>
+                    <h2>
+                        Available Rooms
+                    </h2>
+
                 </div>
 
             </div>
 
-            <article class="featured-room-card">
 
-                <div class="featured-room-content">
+            <!--
+                IMPORTANT
 
-                    <div class="room-icon" aria-hidden="true">
-                        🛡️
-                    </div>
+                The old hard-coded Cyber Security room
+                has been removed.
 
-                    <div class="room-title-row">
+                dashboard.js will retrieve published rooms
+                from:
 
-                        <div>
-                            <span class="room-status available-status">
-                                Available
-                            </span>
+                GET http://localhost:5000/api/rooms
 
-                            <h2>Cyber Security</h2>
-                        </div>
+                and insert the room cards here.
+            -->
 
-                        <span class="room-level-badge">
-                            Beginner
-                        </span>
+            <div id="publishedRoomsContainer">
 
-                    </div>
+                <p>
+                    Loading available rooms...
+                </p>
 
-                    <p class="room-description">
-                        The university server has been compromised.
-                        Identify security threats, protect passwords and
-                        recover administrator access before the system is
-                        encrypted.
-                    </p>
-
-                    <div class="room-information">
-
-                        <div class="room-information-item">
-
-                            <span class="room-information-label">
-                                Difficulty
-                            </span>
-
-                            <strong>
-                                Beginner
-                            </strong>
-
-                        </div>
-
-                        <div class="room-information-item">
-
-                            <span class="room-information-label">
-                                Time Limit
-                            </span>
-
-                            <strong>
-                                15 Minutes
-                            </strong>
-
-                        </div>
-
-                        <div class="room-information-item">
-
-                            <span class="room-information-label">
-                                Puzzles
-                            </span>
-
-                            <strong>
-                                3 Challenges
-                            </strong>
-
-                        </div>
-
-                        <div class="room-information-item">
-
-                            <span class="room-information-label">
-                                Subject
-                            </span>
-
-                            <strong>
-                                Cyber Security
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-                    <div class="room-learning-objectives">
-
-                        <h3>Learning objectives</h3>
-
-                        <ul>
-                            <li>
-                                Recognise secure web communication protocols.
-                            </li>
-
-                            <li>
-                                Identify the characteristics of strong passwords.
-                            </li>
-
-                            <li>
-                                Use logical thinking to decode a simple cipher.
-                            </li>
-                        </ul>
-
-                    </div>
-
-                    <a
-                        href="rooms/cyber-security/intro.html"
-                        class="primary-btn room-start-button"
-                    >
-                        Start Mission
-                    </a>
-
-                </div>
-
-                <div class="featured-room-panel">
-
-                    <p class="mission-panel-label">
-                        Mission Status
-                    </p>
-
-                    <div class="mission-status-graphic">
-                        <span aria-hidden="true">
-                            🔐
-                        </span>
-                    </div>
-
-                    <h3>Security Breach Detected</h3>
-
-                    <p>
-                        The system is waiting for a student agent to begin
-                        the recovery mission.
-                    </p>
-
-                    <div class="mission-panel-detail">
-                        <span>Room Code</span>
-                        <strong>CYBER-01</strong>
-                    </div>
-
-                </div>
-
-            </article>
+            </div>
 
         </section>
 
-        <!-- Upcoming rooms -->
+
+
+        <!-- ==================================================
+             UPCOMING ROOMS
+        =================================================== -->
 
         <section class="dashboard-section">
 
             <div class="section-heading">
 
                 <div>
+
                     <p class="section-label">
                         Platform Roadmap
                     </p>
 
-                    <h2>Upcoming Rooms</h2>
+                    <h2>
+                        Upcoming Rooms
+                    </h2>
+
                 </div>
+
 
                 <span class="section-status">
                     Coming in Next Sprint
@@ -369,130 +389,234 @@
 
             </div>
 
+
+
             <div class="upcoming-room-grid">
+
+
+                <!-- Networking -->
 
                 <article class="upcoming-room-card">
 
-                    <div class="upcoming-room-icon" aria-hidden="true">
+                    <div
+                        class="upcoming-room-icon"
+                        aria-hidden="true"
+                    >
                         🌐
                     </div>
 
+
                     <span class="coming-soon-badge">
                         Coming in Next Sprint
                     </span>
 
-                    <h3>Networking</h3>
+
+                    <h3>
+                        Networking
+                    </h3>
+
 
                     <p>
-                        Explore network devices, secure connections,
-                        IP addressing and infrastructure protection.
+
+                        Explore network devices,
+                        secure connections,
+                        IP addressing and
+                        infrastructure protection.
+
                     </p>
 
+
                     <div class="upcoming-room-meta">
-                        <span>Beginner</span>
-                        <span>Locked</span>
+
+                        <span>
+                            Beginner
+                        </span>
+
+                        <span>
+                            Locked
+                        </span>
+
                     </div>
 
                 </article>
 
+
+
+                <!-- Cloud Security -->
+
                 <article class="upcoming-room-card">
 
-                    <div class="upcoming-room-icon" aria-hidden="true">
+                    <div
+                        class="upcoming-room-icon"
+                        aria-hidden="true"
+                    >
                         ☁️
                     </div>
 
+
                     <span class="coming-soon-badge">
                         Coming in Next Sprint
                     </span>
 
-                    <h3>Cloud Security</h3>
+
+                    <h3>
+                        Cloud Security
+                    </h3>
+
 
                     <p>
-                        Learn how to protect cloud identities,
-                        storage services and shared resources.
+
+                        Learn how to protect cloud
+                        identities, storage services
+                        and shared resources.
+
                     </p>
 
+
                     <div class="upcoming-room-meta">
-                        <span>Intermediate</span>
-                        <span>Locked</span>
+
+                        <span>
+                            Intermediate
+                        </span>
+
+                        <span>
+                            Locked
+                        </span>
+
                     </div>
 
                 </article>
+
+
+
+                <!-- Secure Coding -->
 
                 <article class="upcoming-room-card">
 
-                    <div class="upcoming-room-icon" aria-hidden="true">
+                    <div
+                        class="upcoming-room-icon"
+                        aria-hidden="true"
+                    >
                         💻
                     </div>
+
 
                     <span class="coming-soon-badge">
                         Coming in Next Sprint
                     </span>
 
-                    <h3>Secure Coding</h3>
+
+                    <h3>
+                        Secure Coding
+                    </h3>
+
 
                     <p>
-                        Discover secure development practices,
-                        input validation and common web risks.
+
+                        Discover secure development
+                        practices, input validation
+                        and common web risks.
+
                     </p>
 
+
                     <div class="upcoming-room-meta">
-                        <span>Advanced</span>
-                        <span>Locked</span>
+
+                        <span>
+                            Advanced
+                        </span>
+
+                        <span>
+                            Locked
+                        </span>
+
                     </div>
 
                 </article>
+
 
             </div>
 
         </section>
 
-        <!-- Student features -->
+
+
+        <!-- ==================================================
+             STUDENT FEATURES
+        =================================================== -->
 
         <section class="dashboard-section">
 
             <div class="section-heading">
 
                 <div>
+
                     <p class="section-label">
                         Student Tools
                     </p>
 
-                    <h2>Student Features</h2>
+                    <h2>
+                        Student Features
+                    </h2>
+
                 </div>
 
             </div>
 
+
+
             <div class="student-feature-grid">
+
+
+                <!-- Leaderboard -->
 
                 <article class="student-feature-card">
 
-                    <div class="student-feature-icon" aria-hidden="true">
+                    <div
+                        class="student-feature-icon"
+                        aria-hidden="true"
+                    >
                         🏆
                     </div>
 
+
                     <div>
 
                         <span class="coming-soon-badge">
                             Coming in Next Sprint
                         </span>
 
-                        <h3>Leaderboard</h3>
+
+                        <h3>
+                            Leaderboard
+                        </h3>
+
 
                         <p>
-                            Compare your mission scores and completion
-                            times with other students.
+
+                            Compare your mission scores
+                            and completion times with
+                            other students.
+
                         </p>
 
                     </div>
 
                 </article>
+
+
+
+                <!-- Progress Tracking -->
 
                 <article class="student-feature-card">
 
-                    <div class="student-feature-icon" aria-hidden="true">
+                    <div
+                        class="student-feature-icon"
+                        aria-hidden="true"
+                    >
                         📈
                     </div>
+
 
                     <div>
 
@@ -500,22 +624,37 @@
                             Coming in Next Sprint
                         </span>
 
-                        <h3>Progress Tracking</h3>
+
+                        <h3>
+                            Progress Tracking
+                        </h3>
+
 
                         <p>
-                            Track completed rooms, scores,
-                            achievements and learning progress.
+
+                            Track completed rooms,
+                            scores, achievements and
+                            learning progress.
+
                         </p>
 
                     </div>
 
                 </article>
+
 
             </div>
 
         </section>
 
+
     </main>
+
+
+
+    <!-- ==================================================
+         FOOTER
+    =================================================== -->
 
     <footer class="dashboard-footer">
 
@@ -523,12 +662,28 @@
             &copy; 2026 FedEscape
         </p>
 
+
         <p>
+
             Educational Escape Room Platform |
             Federation University Australia
+
         </p>
 
     </footer>
 
+
+
+    <!-- ==================================================
+         STUDENT DASHBOARD JAVASCRIPT
+
+         Loads published rooms from MongoDB through
+         the FedEscape backend.
+    =================================================== -->
+
+    <script src="js/dashboard.js"></script>
+
+
 </body>
+
 </html>
