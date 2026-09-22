@@ -1,107 +1,585 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>Escape Room Creator | FedEscape</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="stylesheet"
+        href="../css/style.css"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
     <link
         rel="preconnect"
         href="https://fonts.gstatic.com"
         crossorigin
     >
+
     <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
+        rel="stylesheet"
     >
 </head>
+
+
 <body class="dashboard-page">
+
+    <!-- ==================================================
+         HEADER
+    =================================================== -->
+
     <header class="dashboard-header">
+
         <nav class="navbar dashboard-navbar">
-            <a href="dashboard.html" class="dashboard-logo">
+
+            <a
+                href="../teacherdashboard.html"
+                class="dashboard-logo"
+            >
                 FedEscape
             </a>
+
 
             <ul class="nav-links dashboard-nav-links">
 
                 <li>
-                    <a
-                        href="../teacherdashboard.html"
-                        class="active-nav-link"
-                    >
+                    <a href="../teacherdashboard.html">
                         Dashboard
                     </a>
                 </li>
 
                 <li>
-                    <a href="../rooms/escaperoomcreate.html">
+                    <a
+                        href="escaperoomcreate.html"
+                        class="active-nav-link"
+                    >
                         Rooms
                     </a>
                 </li>
+
                 <li>
-                    <a href="../results.html">
+                    <a href="#" onclick="showPage('results'); return false;"></a>
                         Results
                     </a>
                 </li>
+
                 <li>
                     <a href="../index.html">
                         Logout
                     </a>
                 </li>
 
-                
             </ul>
+
         </nav>
+
     </header>
-    <main>
-        <nav>
-            <button class="primary-btn dashboard-hero-button" onclick="showPage('rooms')">View Rooms</button>
-            <button class="primary-btn dashboard-hero-button" onclick="showPage('create')">Create Rooms</button>
-            <button class="primary-btn dashboard-hero-button" onclick="showPage('results')">View Results</button>
+
+
+    <!-- ==================================================
+         MAIN CONTENT
+    =================================================== -->
+
+    <main class="educator-room-main">
+
+
+        <!-- ==================================================
+             PAGE TITLE
+        =================================================== -->
+
+        <section class="room-manager-header">
+
+            <div>
+
+                <p class="dashboard-eyebrow">
+                    Educator Portal
+                </p>
+
+                <h1>Manage Escape Rooms</h1>
+
+                <p>
+                    Create, edit and manage interactive
+                    learning experiences for your students.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             NAVIGATION BUTTONS
+        =================================================== -->
+
+        <nav
+            class="room-manager-nav"
+            aria-label="Room management"
+        >
+
+            <button
+                type="button"
+                class="primary-btn dashboard-hero-button"
+                onclick="showPage('rooms')"
+            >
+                View Rooms
+            </button>
+
+            <button
+                type="button"
+                class="primary-btn dashboard-hero-button"
+                onclick="showPage('create')"
+            >
+                + Create Room
+            </button>
+
+            <button
+                type="button"
+                class="primary-btn dashboard-hero-button"
+                onclick="showPage('results')"
+            >
+                View Results
+            </button>
+
         </nav>
-        <!--view-->
-        <section id="roomsPage">
-                <h2>Rooms</h2>
-                <div id="roomList"></div>
+
+
+        <!-- ==================================================
+             ROOM LIST
+        =================================================== -->
+
+        <section
+            id="roomsPage"
+            class="room-management-page"
+        >
+
+            <div class="section-heading">
+
+                <div>
+                    <h2>Your Escape Rooms</h2>
+
+                    <p>
+                        Manage rooms you have created.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- Room statistics populated by JavaScript -->
+
+            <div
+                id="roomStats"
+                class="room-stats-grid"
+            >
+            </div>
+
+
+            <!-- Room cards populated by JavaScript -->
+
+            <div
+                id="roomList"
+                class="educator-room-grid"
+            >
+            </div>
+
         </section>
-        <!--create-->
-        <section id="createPage" class="hidden">
-                <h2 id="formTitle">Create Room</h2>
-                <form id="roomForm">
-                    <input type="hidden" id="roomId">
-                    <label>
-                        Room Name
-                        <input type="text" id="roomName" required>
+
+
+        <!-- ==================================================
+             CREATE / EDIT ROOM
+        =================================================== -->
+
+        <section
+            id="createPage"
+            class="room-management-page hidden"
+        >
+
+            <div class="section-heading">
+
+                <div>
+
+                    <p class="dashboard-eyebrow">
+                        Room Builder
+                    </p>
+
+                    <h2 id="formTitle">
+                        Create Escape Room
+                    </h2>
+
+                    <p>
+                        Configure the room and add questions
+                        for your students.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <form
+                id="roomForm"
+                class="educator-room-form"
+            >
+
+                <!-- MongoDB room ID when editing -->
+
+                <input
+                    type="hidden"
+                    id="roomId"
+                >
+
+
+                <!-- ==========================================
+                     BASIC ROOM INFORMATION
+                =========================================== -->
+
+                <div class="room-form-section">
+
+                    <h3>Room Information</h3>
+
+                    <div class="room-form-grid">
+
+
+                        <label class="room-form-field">
+
+                            <span>Room Name *</span>
+
+                            <input
+                                type="text"
+                                id="roomName"
+                                maxlength="100"
+                                placeholder="e.g. Cyber Security Challenge"
+                                required
+                            >
+
+                        </label>
+
+
+                        <label class="room-form-field">
+
+                            <span>Time Limit (minutes) *</span>
+
+                            <input
+                                type="number"
+                                id="roomTime"
+                                min="1"
+                                max="300"
+                                placeholder="30"
+                                required
+                            >
+
+                        </label>
+
+
+                        <label class="room-form-field">
+
+                            <span>Category</span>
+
+                            <input
+                                type="text"
+                                id="roomCategory"
+                                maxlength="100"
+                                placeholder="e.g. Cybersecurity"
+                                value="General"
+                            >
+
+                        </label>
+
+
+                        <label class="room-form-field">
+
+                            <span>Difficulty</span>
+
+                            <select id="roomDifficulty">
+
+                                <option value="beginner">
+                                    Beginner
+                                </option>
+
+                                <option value="intermediate">
+                                    Intermediate
+                                </option>
+
+                                <option value="advanced">
+                                    Advanced
+                                </option>
+
+                            </select>
+
+                        </label>
+
+                    </div>
+
+
+                    <label class="room-form-field">
+
+                        <span>Description *</span>
+
+                        <textarea
+                            id="roomDescription"
+                            maxlength="2000"
+                            rows="5"
+                            placeholder="Describe the escape room..."
+                            required
+                        ></textarea>
+
                     </label>
-                    <label>
-                        Description
-                        <textarea id="roomDescription" required>
-                        </textarea>
+
+
+                    <label class="room-form-field">
+
+                        <span>Instructions</span>
+
+                        <textarea
+                            id="roomInstructions"
+                            maxlength="2000"
+                            rows="4"
+                            placeholder="Instructions students should read before beginning..."
+                        ></textarea>
+
                     </label>
-                    <label>
-                        Time Limit
-                        <input type="number" id="roomTime" required>
+
+                </div>
+
+
+                <!-- ==========================================
+                     QUESTIONS
+                =========================================== -->
+
+                <div class="room-form-section question-builder-section">
+
+                    <div class="question-builder-heading">
+
+                        <div>
+
+                            <h3>Questions & Puzzles</h3>
+
+                            <p>
+                                Add text, multiple-choice or
+                                true/false questions. Questions
+                                can also include an image,
+                                video or audio resource.
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            id="addQuestionBtn"
+                            class="primary-btn"
+                        >
+                            + Add Question
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="questionsContainer"
+                        class="questions-container"
+                    >
+
+                        <p
+                            id="noQuestionsMessage"
+                            class="empty-questions-message"
+                        >
+                            No questions added yet.
+                            Select <strong>+ Add Question</strong>
+                            to create your first question.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==========================================
+                     ROOM SETTINGS
+                =========================================== -->
+
+                <div class="room-form-section">
+
+                    <h3>Room Settings</h3>
+
+
+                    <label class="room-form-field">
+
+                        <span>Completion Message</span>
+
+                        <textarea
+                            id="roomCompletionMessage"
+                            maxlength="1000"
+                            rows="3"
+                            placeholder="Message shown after students complete the room."
+                        >Congratulations! You completed the escape room.</textarea>
+
                     </label>
-                    <button class="primary-btn dashboard-hero-button" type="submit">Save Room</button>
-                    <button class="primary-btn dashboard-hero-button" type="button" onclick="showPage('rooms')">Cancel</button>
-                </form>
+
+
+                    <div class="room-form-grid">
+
+
+                        <label class="room-form-field">
+
+                            <span>Maximum Attempts</span>
+
+                            <input
+                                type="number"
+                                id="roomMaxAttempts"
+                                min="1"
+                                placeholder="Leave empty for unlimited"
+                            >
+
+                        </label>
+
+
+                        <label class="room-checkbox-field">
+
+                            <input
+                                type="checkbox"
+                                id="roomAllowHints"
+                                checked
+                            >
+
+                            <span>
+                                Allow students to use hints
+                            </span>
+
+                        </label>
+
+
+                        <label class="room-checkbox-field">
+
+                            <input
+                                type="checkbox"
+                                id="roomShowScore"
+                                checked
+                            >
+
+                            <span>
+                                Show score after completion
+                            </span>
+
+                        </label>
+
+
+                        <label class="room-checkbox-field">
+
+                            <input
+                                type="checkbox"
+                                id="roomLeaderboardEnabled"
+                                checked
+                            >
+
+                            <span>
+                                Enable leaderboard
+                            </span>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==========================================
+                     FORM ACTIONS
+                =========================================== -->
+
+                <div class="room-form-actions">
+
+                    <button
+                        type="submit"
+                        class="primary-btn dashboard-hero-button"
+                    >
+                        Save Room
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="secondary-btn"
+                        onclick="showPage('rooms')"
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+            </form>
+
         </section>
-        <!--results-->
-        <section id="resultsPage" class="hidden">
-            <h2>Results</h2>
-            <div id="resultsList"></div>
+
+
+        <!-- ==================================================
+             RESULTS
+        =================================================== -->
+
+        <section
+            id="resultsPage"
+            class="room-management-page hidden"
+        >
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>Student Results</h2>
+
+                    <p>
+                        Review student attempts and performance.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="resultsList">
+            </div>
+
         </section>
+
     </main>
+
+
+    <!-- ==================================================
+         FOOTER
+    =================================================== -->
+
     <footer class="dashboard-footer">
+
         <p>
             &copy; 2026 FedEscape
         </p>
+
         <p>
             Educational Escape Room Platform |
             Federation University Australia
         </p>
+
     </footer>
-<script src="../js/educreateroom.js"></script>
+
+
+    <!-- ==================================================
+         EDUCATOR ROOM JAVASCRIPT
+    =================================================== -->
+
+    <script src="../js/educreateroom.js"></script>
+
 </body>
+
 </html>
