@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Student Progress Tracking | FedEscape</title>
+
+    <!-- Main FedEscape stylesheet -->
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+    <!-- Google Font -->
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+</head>
+
+
+<body class="dashboard-page student-progress-page">
+
+
+    <!-- ======================================================
+         HEADER / NAVIGATION
+         ====================================================== -->
+
+    <header class="dashboard-header">
+
+        <nav class="navbar dashboard-navbar">
+
+            <a
+                href="teacherdashboard.html"
+                class="dashboard-logo"
+            >
+                FedEscape
+            </a>
+
+
+            <ul class="nav-links dashboard-nav-links">
+
+                <li>
+                    <a href="teacherdashboard.html">
+                        Dashboard
+                    </a>
+                </li>
+
+                <li>
+                    <a href="rooms/escaperoomcreate.html">
+                        Rooms
+                    </a>
+                </li>
+
+                <li>
+                    <a href="educatorleaderboard.html">
+                        Leaderboard
+                    </a>
+                </li>
+
+                <li>
+                    <a
+                        href="studentprogress.html"
+                        class="active-nav-link"
+                    >
+                        Progress
+                    </a>
+                </li>
+
+                <li>
+                    <a
+                        href="#"
+                        id="logoutButton"
+                    >
+                        Logout
+                    </a>
+                </li>
+
+            </ul>
+
+        </nav>
+
+    </header>
+
+
+    <!-- ======================================================
+         MAIN CONTENT
+         ====================================================== -->
+
+    <main class="dashboard-main student-progress-main">
+
+
+        <!-- ==================================================
+             HERO
+             ================================================== -->
+
+        <section class="dashboard-welcome">
+
+            <div class="dashboard-welcome-content">
+
+                <p class="dashboard-eyebrow">
+                    Educator Portal
+                </p>
+
+                <h1>
+                    Student Progress Tracking
+                </h1>
+
+                <p>
+                    Monitor individual student activity,
+                    completion progress and performance
+                    across your escape rooms.
+                </p>
+
+                <a
+                    href="teacherdashboard.html"
+                    class="primary-btn dashboard-hero-button"
+                >
+                    Back to Dashboard
+                </a>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             PROGRESS TRACKING SECTION
+             ================================================== -->
+
+        <section
+            class="dashboard-section student-progress-section"
+            aria-labelledby="studentProgressHeading"
+        >
+
+
+            <!-- ==============================================
+                 SECTION HEADING
+                 ============================================== -->
+
+            <div class="section-heading">
+
+                <div>
+
+                    <p class="dashboard-eyebrow">
+                        Student Performance
+                    </p>
+
+                    <h2 id="studentProgressHeading">
+                        Individual Student Progress
+                    </h2>
+
+                    <p>
+                        Select a student to review their
+                        escape room activity and results.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================================
+                 STUDENT SELECTOR
+                 ============================================== -->
+
+            <div class="student-progress-controls">
+
+                <div class="student-progress-field">
+
+                    <label for="studentProgressSelect">
+                        Select Student
+                    </label>
+
+                    <select
+                        id="studentProgressSelect"
+                        aria-label="Select a student"
+                        disabled
+                    >
+
+                        <option value="">
+                            Loading students...
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================================
+                 SELECTED STUDENT INFORMATION
+                 ============================================== -->
+
+            <section
+                id="selectedStudentInfo"
+                class="student-progress-student-info"
+                aria-live="polite"
+                hidden
+            >
+
+                <div class="student-progress-student-avatar">
+                    👤
+                </div>
+
+                <div>
+
+                    <p class="dashboard-eyebrow">
+                        Selected Student
+                    </p>
+
+                    <h3 id="selectedStudentName">
+                        Student
+                    </h3>
+
+                    <p id="selectedStudentEmail">
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==============================================
+                 SUMMARY CARDS
+                 ============================================== -->
+
+            <div
+                id="studentProgressSummary"
+                class="student-progress-summary"
+                hidden
+            >
+
+
+                <article class="student-progress-stat-card">
+
+                    <span>
+                        Rooms Attempted
+                    </span>
+
+                    <strong id="studentRoomsAttempted">
+                        0
+                    </strong>
+
+                </article>
+
+
+                <article class="student-progress-stat-card">
+
+                    <span>
+                        Completed
+                    </span>
+
+                    <strong id="studentCompletedCount">
+                        0
+                    </strong>
+
+                </article>
+
+
+                <article class="student-progress-stat-card">
+
+                    <span>
+                        In Progress
+                    </span>
+
+                    <strong id="studentInProgressCount">
+                        0
+                    </strong>
+
+                </article>
+
+
+                <article class="student-progress-stat-card">
+
+                    <span>
+                        Average Score
+                    </span>
+
+                    <strong id="studentAverageScore">
+                        0%
+                    </strong>
+
+                </article>
+
+            </div>
+
+
+            <!-- ==============================================
+                 INITIAL STATE
+                 ============================================== -->
+
+            <div
+                id="studentProgressInitial"
+                class="room-empty-state"
+            >
+
+                <strong>
+                    Select a student
+                </strong>
+
+                <p>
+                    Choose a student above to view their
+                    progress across your escape rooms.
+                </p>
+
+            </div>
+
+
+            <!-- ==============================================
+                 LOADING STATE
+                 ============================================== -->
+
+            <div
+                id="studentProgressLoading"
+                class="room-empty-state"
+                role="status"
+                aria-live="polite"
+                hidden
+            >
+
+                <strong>
+                    Loading student progress...
+                </strong>
+
+                <p>
+                    Please wait while FedEscape retrieves
+                    the student's latest activity.
+                </p>
+
+            </div>
+
+
+            <!-- ==============================================
+                 ERROR STATE
+                 ============================================== -->
+
+            <div
+                id="studentProgressError"
+                class="room-empty-state"
+                role="alert"
+                hidden
+            >
+
+                <strong>
+                    Unable to load student progress
+                </strong>
+
+                <p id="studentProgressErrorMessage">
+                    Something went wrong while retrieving
+                    student progress.
+                </p>
+
+                <button
+                    type="button"
+                    id="studentProgressRetryButton"
+                    class="primary-btn"
+                >
+                    Try Again
+                </button>
+
+            </div>
+
+
+            <!-- ==============================================
+                 NO STUDENTS STATE
+                 ============================================== -->
+
+            <div
+                id="studentProgressNoStudents"
+                class="room-empty-state"
+                hidden
+            >
+
+                <strong>
+                    No student activity yet
+                </strong>
+
+                <p>
+                    Students will appear here after they begin
+                    attempting one of your escape rooms.
+                </p>
+
+            </div>
+
+
+            <!-- ==============================================
+                 STUDENT ROOM PROGRESS
+                 ============================================== -->
+
+            <section
+                id="studentRoomProgress"
+                class="student-room-progress-section"
+                hidden
+            >
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <p class="dashboard-eyebrow">
+                            Activity
+                        </p>
+
+                        <h2>
+                            Escape Room Progress
+                        </h2>
+
+                        <p>
+                            Review this student's attempts,
+                            progress and performance.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==========================================
+                     PROGRESS TABLE
+                     ========================================== -->
+
+                <div class="student-progress-table-wrapper">
+
+                    <table
+                        id="studentProgressTable"
+                        class="student-progress-table"
+                    >
+
+                        <caption class="sr-only">
+                            Escape room progress for the
+                            selected student
+                        </caption>
+
+
+                        <thead>
+
+                            <tr>
+
+                                <th scope="col">
+                                    Room
+                                </th>
+
+                                <th scope="col">
+                                    Attempt
+                                </th>
+
+                                <th scope="col">
+                                    Status
+                                </th>
+
+                                <th scope="col">
+                                    Progress
+                                </th>
+
+                                <th scope="col">
+                                    Score
+                                </th>
+
+                                <th scope="col">
+                                    Last Activity
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="studentProgressTableBody">
+
+                            <!--
+                                Rows will be generated
+                                by studentprogress.js
+                            -->
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+        </section>
+
+
+        <!-- ==================================================
+             INFORMATION SECTION
+             ================================================== -->
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        Progress Overview
+                    </h2>
+
+                    <p>
+                        Student progress is calculated from
+                        their recorded escape room attempts.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="student-feature-grid">
+
+
+                <article class="student-feature-card">
+
+                    <div
+                        class="student-feature-icon"
+                        aria-hidden="true"
+                    >
+                        📈
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Track Progress
+                        </h3>
+
+                        <p>
+                            See whether students have started,
+                            progressed through or completed
+                            your escape rooms.
+                        </p>
+
+                    </div>
+
+                </article>
+
+
+                <article class="student-feature-card">
+
+                    <div
+                        class="student-feature-icon"
+                        aria-hidden="true"
+                    >
+                        🎯
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Review Performance
+                        </h3>
+
+                        <p>
+                            Compare completion progress and
+                            scores across each student's
+                            recorded attempts.
+                        </p>
+
+                    </div>
+
+                </article>
+
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- ======================================================
+         FOOTER
+         ====================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <p>
+            &copy; 2026 FedEscape
+        </p>
+
+        <p>
+            Educational Escape Room Platform |
+            Federation University Australia
+        </p>
+
+    </footer>
+
+
+    <!-- ======================================================
+         JAVASCRIPT
+         ====================================================== -->
+
+    <script src="js/studentprogress.js"></script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Leaderboard | FedEscape</title>
+
+    <!-- Main FedEscape stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+</head>
+
+
+<body class="dashboard-page educator-leaderboard-page">
+
+
+    <!-- ======================================================
+         HEADER / NAVIGATION
+         ====================================================== -->
+
+    <header class="dashboard-header">
+
+        <nav class="navbar dashboard-navbar">
+
+            <a
+                href="teacherdashboard.html"
+                class="dashboard-logo"
+            >
+                FedEscape
+            </a>
+
+            <ul class="nav-links dashboard-nav-links">
+
+                <li>
+                    <a href="teacherdashboard.html">
+                        Dashboard
+                    </a>
+                </li>
+
+                <li>
+                    <a href="rooms/escaperoomcreate.html">
+                        Rooms
+                    </a>
+                </li>
+
+                <li>
+                    <a
+                        href="educatorleaderboard.html"
+                        class="active-nav-link"
+                    >
+                        Leaderboard
+                    </a>
+                </li>
+
+                <li>
+                    <a
+                        href="#"
+                        id="logoutButton"
+                    >
+                        Logout
+                    </a>
+                </li>
+
+            </ul>
+
+        </nav>
+
+    </header>
+
+
+    <!-- ======================================================
+         MAIN CONTENT
+         ====================================================== -->
+
+    <main class="dashboard-main educator-leaderboard-main">
+
+
+        <!-- ==================================================
+             HERO / INTRODUCTION
+             ================================================== -->
+
+        <section class="dashboard-welcome">
+
+            <div class="dashboard-welcome-content">
+
+                <p class="dashboard-eyebrow">
+                    Educator Portal
+                </p>
+
+                <h1>
+                    Student Leaderboard
+                </h1>
+
+                <p>
+                    Monitor student rankings and compare performance
+                    across your escape rooms.
+                </p>
+
+                <a
+                    href="teacherdashboard.html"
+                    class="primary-btn dashboard-hero-button"
+                >
+                    Back to Dashboard
+                </a>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             LEADERBOARD SECTION
+             ================================================== -->
+
+        <section
+            class="dashboard-section educator-leaderboard-section"
+            aria-labelledby="leaderboardHeading"
+        >
+
+
+            <!-- ==============================================
+                 SECTION HEADING
+                 ============================================== -->
+
+            <div class="section-heading">
+
+                <div>
+
+                    <p class="dashboard-eyebrow">
+                        Student Performance
+                    </p>
+
+                    <h2 id="leaderboardHeading">
+                        Room Leaderboard
+                    </h2>
+
+                    <p>
+                        Select one of your escape rooms to view
+                        student rankings and performance.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================================
+                 ROOM SELECTOR
+                 ============================================== -->
+
+            <div class="educator-leaderboard-controls">
+
+                <div class="educator-leaderboard-field">
+
+                    <label for="leaderboardRoomSelect">
+                        Select Escape Room
+                    </label>
+
+                    <select
+                        id="leaderboardRoomSelect"
+                        aria-label="Select an escape room"
+                        disabled
+                    >
+
+                        <option value="">
+                            Loading your rooms...
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================================
+                 ROOM INFORMATION
+                 ============================================== -->
+
+            <section
+                id="leaderboardRoomInfo"
+                class="educator-leaderboard-room-info"
+                aria-live="polite"
+                hidden
+            >
+
+                <div>
+
+                    <p class="dashboard-eyebrow">
+                        Selected Room
+                    </p>
+
+                    <h3 id="leaderboardRoomName">
+                        Escape Room
+                    </h3>
+
+                    <p id="leaderboardRoomDescription">
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==============================================
+                 LEADERBOARD SUMMARY
+                 ============================================== -->
+
+            <div
+                id="leaderboardSummary"
+                class="educator-results-summary"
+                hidden
+            >
+
+                <article class="room-stat room-stat-card">
+
+                    <span>
+                        Ranked Students
+                    </span>
+
+                    <strong id="leaderboardStudentCount">
+                        0
+                    </strong>
+
+                </article>
+
+
+                <article class="room-stat room-stat-card">
+
+                    <span>
+                        Highest Score
+                    </span>
+
+                    <strong id="leaderboardHighestScore">
+                        -
+                    </strong>
+
+                </article>
+
+
+                <article class="room-stat room-stat-card">
+
+                    <span>
+                        Highest Percentage
+                    </span>
+
+                    <strong id="leaderboardHighestPercentage">
+                        -
+                    </strong>
+
+                </article>
+
+            </div>
+
+
+            <!-- ==============================================
+                 INITIAL STATE
+                 ============================================== -->
+
+            <div
+                id="leaderboardInitial"
+                class="room-empty-state"
+            >
+
+                <strong>
+                    Select an escape room
+                </strong>
+
+                <p>
+                    Choose one of your rooms above to view
+                    its student leaderboard.
+                </p>
+
+            </div>
+
+
+            <!-- ==============================================
+                 LOADING STATE
+                 ============================================== -->
+
+            <div
+                id="leaderboardLoading"
+                class="room-empty-state"
+                role="status"
+                aria-live="polite"
+                hidden
+            >
+
+                <strong>
+                    Loading leaderboard...
+                </strong>
+
+                <p>
+                    Please wait while FedEscape retrieves
+                    the latest student rankings.
+                </p>
+
+            </div>
+
+
+            <!-- ==============================================
+                 ERROR STATE
+                 ============================================== -->
+
+            <div
+                id="leaderboardError"
+                class="room-empty-state"
+                role="alert"
+                hidden
+            >
+
+                <strong>
+                    Unable to load leaderboard
+                </strong>
+
+                <p id="leaderboardErrorMessage">
+                    Something went wrong while retrieving
+                    the leaderboard.
+                </p>
+
+                <button
+                    type="button"
+                    id="leaderboardRetryButton"
+                    class="primary-btn"
+                >
+                    Try Again
+                </button>
+
+            </div>
+
+
+            <!-- ==============================================
+                 EMPTY LEADERBOARD STATE
+                 ============================================== -->
+
+            <div
+                id="leaderboardEmpty"
+                class="room-empty-state"
+                hidden
+            >
+
+                <strong>
+                    No leaderboard entries yet
+                </strong>
+
+                <p>
+                    Completed and leaderboard-eligible student
+                    attempts will appear here.
+                </p>
+
+            </div>
+
+
+            <!-- ==============================================
+                 LEADERBOARD TABLE
+                 ============================================== -->
+
+            <div
+                id="leaderboardTableWrapper"
+                class="educator-results-table-wrapper"
+                hidden
+            >
+
+                <table
+                    id="educatorLeaderboardTable"
+                    class="educator-results-table"
+                >
+
+                    <caption class="sr-only">
+                        Student leaderboard for the selected escape room
+                    </caption>
+
+                    <thead>
+
+                        <tr>
+
+                            <th scope="col">
+                                Rank
+                            </th>
+
+                            <th scope="col">
+                                Student
+                            </th>
+
+                            <th scope="col">
+                                Score
+                            </th>
+
+                            <th scope="col">
+                                Percentage
+                            </th>
+
+                            <th scope="col">
+                                Completion Time
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="educatorLeaderboardBody">
+
+                        <!--
+                            Leaderboard rows will be generated
+                            by educatorleaderboard.js
+                        -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- ==================================================
+             INFORMATION SECTION
+             ================================================== -->
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        About the Leaderboard
+                    </h2>
+
+                    <p>
+                        Rankings are generated from completed
+                        leaderboard-eligible attempts for the
+                        selected escape room.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="student-feature-grid">
+
+                <article class="student-feature-card">
+
+                    <div
+                        class="student-feature-icon"
+                        aria-hidden="true"
+                    >
+                        🏆
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Student Rankings
+                        </h3>
+
+                        <p>
+                            View student placement based on
+                            their recorded leaderboard results.
+                        </p>
+
+                    </div>
+
+                </article>
+
+
+                <article class="student-feature-card">
+
+                    <div
+                        class="student-feature-icon"
+                        aria-hidden="true"
+                    >
+                        📊
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Performance
+                        </h3>
+
+                        <p>
+                            Compare scores, percentages and
+                            completion times for your students.
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- ======================================================
+         FOOTER
+         ====================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <p>
+            &copy; 2026 FedEscape
+        </p>
+
+        <p>
+            Educational Escape Room Platform |
+            Federation University Australia
+        </p>
+
+    </footer>
+
+
+    <!-- ======================================================
+         JAVASCRIPT
+         ====================================================== -->
+
+    <script src="js/educatorleaderboard.js"></script>
+
+
+</body>
+
+</html>
