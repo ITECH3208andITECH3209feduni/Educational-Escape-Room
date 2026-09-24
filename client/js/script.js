@@ -426,11 +426,26 @@ function initialiseRegisterForm() {
                     data
                 );
 
+                if (data.requiresEmailVerification) {
+
+                    alert(
+                        "Account created successfully!\n\n" +
+                        "A verification email has been sent to " +
+                        email +
+                        ".\n\n" +
+                        "Please check your inbox and verify your email before logging in."
+                    );
+
+                    window.location.href =
+                        "login.html";
+
+                    return;
+                }
 
                 alert(
-                    "Registration successful. Please log in."
+                    data.message ||
+                    "Account created successfully."
                 );
-
 
                 window.location.href =
                     "login.html";

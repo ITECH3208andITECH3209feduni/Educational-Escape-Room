@@ -3,6 +3,7 @@ const router = express.Router();
 
 const {
   registerUser,
+   verifyEmail,
   loginUser,
   getCurrentUser,
   updateProfile,
@@ -22,6 +23,9 @@ const {
 
 // Register new account
 router.post("/register", registerUser);
+
+// Verify email address
+router.get("/verify-email/:token", verifyEmail);
 
 // Login
 router.post("/login", loginUser);

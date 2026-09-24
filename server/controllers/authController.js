@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
-
+const { sendVerificationEmail } = require("../utils/emailService");
 // ======================================================
 // Generate JWT
 // ======================================================
@@ -70,25 +70,60 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create account
+    // Generate email verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+
+    // Hash verification token before storing it in MongoDB
+    const hashedVerificationToken = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+
+    // Create account as unverified
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      role: role || "student"
+      role: role || "student",
+      emailVerified: false,
+      emailVerificationToken: hashedVerificationToken,
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000
     });
 
-    const token = generateToken(user);
+    // Send verification email
+    try {
+      await sendVerificationEmail(
+        user.email,
+        user.name,
+        verificationToken
+      );
+    } catch (emailError) {
+      console.error("Verification email error:", emailError);
 
+      // Remove account if verification email could not be sent
+      // so the user can try registering again.
+      await User.findByIdAndDelete(user._id);
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Account could not be created because the verification email could not be sent. Please try again."
+      });
+    }
+
+    // Do not generate a JWT yet.
+    // The user must verify their email before logging in.
     return res.status(201).json({
       success: true,
-      message: "Account created successfully",
-      token,
+      requiresEmailVerification: true,
+      message:
+        "Account created successfully. Please check your email and verify your account before logging in.",
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
+        emailVerified: user.emailVerified,
         educatorVerified: user.educatorVerified,
         accountStatus: user.accountStatus,
         createdAt: user.createdAt
@@ -100,6 +135,73 @@ const registerUser = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error while creating account"
+    });
+  }
+};
+
+// ======================================================
+// VERIFY EMAIL
+// GET /api/auth/verify-email/:token
+// ======================================================
+
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification token is required"
+      });
+    }
+
+    // Hash the token from the verification link
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    // Find user with matching token that has not expired
+    const user = await User.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: { $gt: Date.now() }
+    }).select(
+      "+emailVerificationToken +emailVerificationExpires"
+    );
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "This verification link is invalid or has expired."
+      });
+    }
+
+    // Mark email as verified
+    user.emailVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpires = null;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Email verified successfully. You can now log in.",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        emailVerified: user.emailVerified
+      }
+    });
+  } catch (error) {
+    console.error("Email verification error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while verifying email"
     });
   }
 };
@@ -151,7 +253,15 @@ const loginUser = async (req, res) => {
         message: "Invalid email or password"
       });
     }
-
+    // Require email verification before login
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        success: false,
+        requiresEmailVerification: true,
+        message:
+          "Please verify your email address before logging in. Check your inbox for the verification email."
+      });
+    }
     // Record login
     user.lastLogin = new Date();
     await user.save();
@@ -464,6 +574,7 @@ const logoutUser = async (req, res) => {
 
 module.exports = {
   registerUser,
+   verifyEmail,
   loginUser,
   getCurrentUser,
   updateProfile,

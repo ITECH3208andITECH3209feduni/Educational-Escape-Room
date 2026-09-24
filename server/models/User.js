@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 
+// ======================================================
+// USER SCHEMA
+// ======================================================
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -35,10 +39,40 @@ const userSchema = new mongoose.Schema(
       default: "student"
     },
 
+    // ==================================================
+    // EMAIL VERIFICATION
+    // ==================================================
+
+    emailVerified: {
+      type: Boolean,
+      default: false
+    },
+
+    emailVerificationToken: {
+      type: String,
+      default: null,
+      select: false
+    },
+
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+      select: false
+    },
+
+    // ==================================================
+    // EDUCATOR VERIFICATION
+    // Separate from email verification
+    // ==================================================
+
     educatorVerified: {
       type: Boolean,
       default: false
     },
+
+    // ==================================================
+    // ACCOUNT STATUS
+    // ==================================================
 
     accountStatus: {
       type: String,
@@ -51,6 +85,10 @@ const userSchema = new mongoose.Schema(
       default: null
     },
 
+    // ==================================================
+    // PASSWORD RESET
+    // ==================================================
+
     passwordResetToken: {
       type: String,
       default: null,
@@ -62,6 +100,10 @@ const userSchema = new mongoose.Schema(
       default: null,
       select: false
     },
+
+    // ==================================================
+    // USER PREFERENCES
+    // ==================================================
 
     preferences: {
       theme: {
@@ -81,15 +123,34 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Remove sensitive fields when returning user data
+
+// ======================================================
+// REMOVE SENSITIVE FIELDS FROM JSON RESPONSES
+// ======================================================
+
 userSchema.methods.toJSON = function () {
   const userObject = this.toObject();
 
+  // Password
   delete userObject.password;
+
+  // Password reset information
   delete userObject.passwordResetToken;
   delete userObject.passwordResetExpires;
+
+  // Email verification information
+  delete userObject.emailVerificationToken;
+  delete userObject.emailVerificationExpires;
 
   return userObject;
 };
 
-module.exports = mongoose.model("User", userSchema);
+
+// ======================================================
+// EXPORT MODEL
+// ======================================================
+
+module.exports = mongoose.model(
+  "User",
+  userSchema
+);

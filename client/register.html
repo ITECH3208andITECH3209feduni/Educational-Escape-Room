@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta name="viewport"
@@ -22,7 +21,6 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
           rel="stylesheet">
-
 </head>
 
 <body class="auth-shell">
@@ -30,7 +28,6 @@
 <main class="auth-layout">
 
     <!-- Left Panel -->
-
     <section class="auth-brand-panel">
 
         <a href="index.html" class="auth-brand-logo">
@@ -59,14 +56,12 @@
                     <span>🎓</span>
 
                     <div>
-
                         <h2>Learn by Doing</h2>
 
                         <p>
                             Solve real educational challenges instead of
                             traditional quizzes.
                         </p>
-
                     </div>
 
                 </div>
@@ -76,14 +71,12 @@
                     <span>🧩</span>
 
                     <div>
-
                         <h2>Interactive Missions</h2>
 
                         <p>
                             Complete escape rooms while learning
                             Cyber Security, Networking and Cloud.
                         </p>
-
                     </div>
 
                 </div>
@@ -93,14 +86,12 @@
                     <span>🏆</span>
 
                     <div>
-
-                        <h2>Earn Achievements</h2>
+                        <h2>Track Your Progress</h2>
 
                         <p>
-                            Future releases will include badges,
-                            progress tracking and leaderboards.
+                            Monitor results, compare leaderboard scores
+                            and improve your performance.
                         </p>
-
                     </div>
 
                 </div>
@@ -115,23 +106,21 @@
 
     </section>
 
-    <!-- Right Panel -->
 
+    <!-- Right Panel -->
     <section class="auth-form-panel">
 
         <div class="auth-form-wrapper">
 
             <a href="index.html"
                class="auth-back-link">
-
                 ← Back to Home
-
             </a>
 
             <div class="auth-form-heading">
 
                 <p class="auth-form-kicker">
-                    Student Registration
+                    Account Registration
                 </p>
 
                 <h2>
@@ -139,54 +128,55 @@
                 </h2>
 
                 <p>
-                    Create your student account to begin your first educational
-                    escape room.
+                    Create your account to start using the
+                    FedEscape educational escape room platform.
                 </p>
 
             </div>
 
-            <form
-                id="registerForm"
-                class="modern-auth-form">
 
+            <form id="registerForm"
+                  class="modern-auth-form">
+
+                <!-- Full Name -->
                 <div class="auth-field">
 
                     <label for="registerName">
-
                         Full Name
-
                     </label>
 
                     <input
                         type="text"
                         id="registerName"
                         placeholder="Enter your full name"
+                        autocomplete="name"
                         required>
 
                 </div>
 
+
+                <!-- Email -->
                 <div class="auth-field">
 
                     <label for="registerEmail">
-
                         Email Address
-
                     </label>
 
                     <input
                         type="email"
                         id="registerEmail"
-                        placeholder="student@example.com"
+                        placeholder="you@example.com"
+                        autocomplete="email"
                         required>
 
                 </div>
 
+
+                <!-- Password -->
                 <div class="auth-field">
 
                     <label for="registerPassword">
-
                         Password
-
                     </label>
 
                     <input
@@ -194,16 +184,17 @@
                         id="registerPassword"
                         minlength="6"
                         placeholder="Create a password"
+                        autocomplete="new-password"
                         required>
 
                 </div>
 
+
+                <!-- Confirm Password -->
                 <div class="auth-field">
 
                     <label for="registerConfirmPassword">
-
                         Confirm Password
-
                     </label>
 
                     <input
@@ -211,16 +202,17 @@
                         id="registerConfirmPassword"
                         minlength="6"
                         placeholder="Confirm your password"
+                        autocomplete="new-password"
                         required>
 
                 </div>
 
+
+                <!-- Role -->
                 <div class="auth-field">
 
                     <label for="registerRole">
-
                         User Role
-
                     </label>
 
                     <select
@@ -235,7 +227,7 @@
                             Student
                         </option>
 
-                        <option value="teacher">
+                        <option value="educator">
                             Teacher
                         </option>
 
@@ -243,6 +235,8 @@
 
                 </div>
 
+
+                <!-- Submit -->
                 <button
                     type="submit"
                     class="primary-btn auth-submit-button">
@@ -253,28 +247,13 @@
 
             </form>
 
-            <div class="auth-demo-note">
-
-                <strong>
-                    Sprint 1 Prototype
-                </strong>
-
-                <p>
-                    Registration is currently simulated. User accounts will be
-                    securely stored in MongoDB once the backend is implemented
-                    in a future sprint.
-                </p>
-
-            </div>
 
             <p class="auth-switch-text">
 
                 Already have an account?
 
                 <a href="login.html">
-
                     Login here
-
                 </a>
 
             </p>
