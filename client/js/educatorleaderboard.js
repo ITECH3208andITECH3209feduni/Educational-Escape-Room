@@ -5,7 +5,7 @@
    ========================================================== */
 
 const EDUCATOR_LEADERBOARD_API_BASE_URL =
-    "http://localhost:5000/api";
+    window.FEDEscapeConfig.apiBaseUrl;
 
 let educatorRooms = [];
 let selectedRoomId = "";

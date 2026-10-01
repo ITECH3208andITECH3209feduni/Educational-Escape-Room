@@ -30,7 +30,7 @@ async function loadPublishedRooms() {
     try {
 
         const response = await fetch(
-            "http://localhost:5000/api/rooms"
+            `${window.FEDEscapeConfig.apiBaseUrl}/rooms`
         );
 
         const data = await response.json();

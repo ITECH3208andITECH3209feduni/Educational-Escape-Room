@@ -1,0 +1,41 @@
+/* Scoped to the room creation form only. */
+#createPage #roomForm.compact-builder { gap: 16px; }
+#createPage .builder-tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px; border: 1px solid #dce4ef; border-radius: 14px; background: #edf2f8; }
+#createPage .builder-tabs button { flex: 1; min-width: 125px; width: auto; margin: 0; padding: 12px 18px; border: 0; border-radius: 10px; background: transparent; color: #526179; font-size: 15px; font-weight: 700; cursor: pointer; }
+#createPage .builder-tabs button[aria-selected="true"] { color: #16213e; background: #fff; box-shadow: 0 2px 8px #16213e12; }
+#createPage .builder-tabs button:focus-visible, #createPage .question-toggle:focus-visible { outline: 3px solid #2f6bc6; outline-offset: 2px; }
+#createPage .compact-builder [hidden] { display: none !important; }
+#createPage .compact-builder .room-form-section { padding: 22px; margin: 0; }
+#createPage .compact-builder .room-form-grid { gap: 14px 20px; }
+#createPage .compact-builder .room-form-field { margin: 0 0 12px; gap: 6px; }
+#createPage .compact-builder input:not([type="checkbox"]):not([type="hidden"]), #createPage .compact-builder select { min-height: 42px; padding: 10px 12px; font-size: 14px; }
+#createPage .compact-builder textarea { min-height: 75px; height: 85px; padding: 10px 12px; font-size: 14px; resize: vertical; }
+#createPage .compact-builder .question-builder-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 10px; }
+#createPage .compact-builder .question-builder-heading p { font-size: 13px; line-height: 1.5; margin: 4px 0; }
+#createPage .compact-builder #addQuestionBtn { width: auto; flex-shrink: 0; padding: 11px 16px; margin: 0; font-size: 14px; }
+#createPage .builder-question-count { margin: 8px 0 12px; color: #66758a; font-size: 13px; }
+#createPage #questionsContainer { display: grid; gap: 10px; max-height: 610px; overflow-y: auto; padding: 2px 8px 2px 2px; scrollbar-gutter: stable; }
+#createPage #questionsContainer .question-card { padding: 14px 16px; margin: 0; min-height: 0; border-radius: 12px; }
+#createPage #questionsContainer .question-header { display: flex; flex-direction: row; align-items: center; gap: 12px; margin: 0; padding: 0; min-height: 0; }
+#createPage #questionsContainer .question-toggle { display: block; flex: 1; min-width: 0; width: auto; padding: 0; margin: 0; border: 0; text-align: left; color: #16213e; background: transparent; font-size: 15px; line-height: 1.5; font-weight: 700; cursor: pointer; }
+#createPage .question-toggle::before { content: '▸'; display: inline-block; margin-right: 8px; color: #2f6bc6; }
+#createPage .question-toggle[aria-expanded="true"]::before { content: '▾'; }
+#createPage .question-summary { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; font-size: 12px; color: #6c7c91; font-weight: 400; margin-top: 2px; }
+#createPage #questionsContainer .remove-question-btn { flex-shrink: 0; width: auto; margin: 0; padding: 7px 12px; font-size: 12px; }
+#createPage #questionsContainer .question-grid { margin-top: 16px; padding: 0; gap: 12px 18px; align-items: start; }
+#createPage #questionsContainer .question-field { margin: 0; padding: 0; min-height: 0; gap: 5px; align-content: start; }
+#createPage #questionsContainer .question-field label { padding: 0; margin: 0; font-size: 13px; }
+#createPage #questionsContainer .question-media { grid-column: 1 / -1; padding: 12px; margin: 0; }
+#createPage #questionsContainer .question-media h4 { margin: 0 0 4px; font-size: 14px; }
+#createPage #questionsContainer .question-media p { margin: 0 0 10px; font-size: 12px; }
+@media (max-width: 700px) {
+ #createPage .compact-builder .question-builder-heading { align-items: flex-start; flex-direction: column; }
+ #createPage #questionsContainer .question-grid { grid-template-columns: 1fr; }
+ #createPage .compact-builder .room-form-section { padding: 16px; }
+ #createPage #questionsContainer { max-height: 65vh; }
+}
+
+/* Keep grid rows sized to their contents inside the scrollable list. */
+#createPage #questionsContainer { align-content: start; grid-auto-rows: max-content; }
+#createPage #questionsContainer .question-card { display: block; height: auto; }
+#createPage #questionsContainer .question-grid { align-content: start; grid-auto-rows: max-content; }

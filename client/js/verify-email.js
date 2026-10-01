@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("verificationActions");
 
     // Backend API used during local development
-    const API_BASE_URL = "http://localhost:5000/api";
+    const API_BASE_URL = window.FEDEscapeConfig.apiBaseUrl;
 
     // Get verification token from the email link
     const params = new URLSearchParams(window.location.search);

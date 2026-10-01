@@ -5,23 +5,27 @@ const nodemailer = require("nodemailer");
 // ======================================================
 
 const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: Number(process.env.EMAIL_PORT),
-    secure: process.env.EMAIL_SECURE === "true",
+  const host = process.env.EMAIL_HOST;
+  const port = Number(process.env.EMAIL_PORT);
+  const secure = process.env.EMAIL_SECURE === "true";
+  const ignoreTLS = process.env.EMAIL_IGNORE_TLS === "true";
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
 
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    },
-
-    // Local development fix for certificate-chain errors.
-    // Remove this when deploying if the production server
-    // has a normal trusted certificate chain.
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
+  if (!host || !Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error("Set EMAIL_HOST and a valid EMAIL_PORT");
+  }
+  if (Boolean(user) !== Boolean(pass)) {
+    throw new Error("Set both EMAIL_USER and EMAIL_PASS, or leave both empty");
+  }
+  // Evan's no-TLS setting is for the local Postfix connection only.
+  if (ignoreTLS && (secure || !["127.0.0.1", "localhost", "::1"].includes(host))) {
+    throw new Error("EMAIL_IGNORE_TLS requires a local SMTP host and EMAIL_SECURE=false");
+  }
+  const options = { host, port, secure, ignoreTLS };
+  if (user && pass) options.auth = { user, pass };
+  // Keep Nodemailer's normal TLS certificate validation for TLS connections.
+  return nodemailer.createTransport(options);
 };
 
 // ======================================================
@@ -36,7 +40,7 @@ const sendVerificationEmail = async (
   const transporter = createTransporter();
 
   const clientUrl =
-    process.env.CLIENT_URL || "http://localhost:5500";
+    (process.env.CLIENT_URL || "http://localhost:5500").replace(/\/+$/, "");
 
   const verificationUrl =
     `${clientUrl}/verify-email.html?token=${verificationToken}`;

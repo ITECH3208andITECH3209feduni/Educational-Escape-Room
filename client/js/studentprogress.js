@@ -5,7 +5,7 @@
    ========================================================== */
 
 const STUDENT_PROGRESS_API_BASE_URL =
-    "http://localhost:5000/api";
+    window.FEDEscapeConfig.apiBaseUrl;
 
 let educatorRooms = [];
 let allStudentAttempts = [];

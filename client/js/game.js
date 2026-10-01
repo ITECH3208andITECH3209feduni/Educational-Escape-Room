@@ -5,7 +5,7 @@
 // Backend + MongoDB integrated version
 // ======================================================
 
-const GAME_API_BASE_URL = "http://localhost:5000/api";
+const GAME_API_BASE_URL = window.FEDEscapeConfig.apiBaseUrl;
 
 let currentRoom = null;
 let answerSubmitting = false;

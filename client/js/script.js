@@ -5,7 +5,7 @@
 // Connects login and registration forms to the backend.
 // ======================================================
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = window.FEDEscapeConfig.apiBaseUrl;
 
 
 document.addEventListener("DOMContentLoaded", () => {
