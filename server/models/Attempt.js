@@ -1,14 +1,14 @@
-const mongoose = require("mongoose");
+const { defineSchema, createModel, ObjectId } = require("../db/model");
 
 // ======================================================
 // Answer Schema
 // Stores one student's answer to one room question
 // ======================================================
 
-const answerSchema = new mongoose.Schema(
+const answerSchema = defineSchema(
   {
     questionId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: ObjectId,
       required: true
     },
 
@@ -61,17 +61,17 @@ const answerSchema = new mongoose.Schema(
 // Represents one student's attempt at one escape room
 // ======================================================
 
-const attemptSchema = new mongoose.Schema(
+const attemptSchema = defineSchema(
   {
     student: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: ObjectId,
       ref: "User",
       required: [true, "Student is required"],
       index: true
     },
 
     room: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: ObjectId,
       ref: "Room",
       required: [true, "Escape room is required"],
       index: true
@@ -219,9 +219,7 @@ attemptSchema.index({
 // Pre-save Calculations
 //
 // Important:
-// We intentionally do NOT use `next` here because
-// your current Mongoose version uses modern middleware
-// behaviour.
+// Runs before persistence through the native-driver model layer.
 // ======================================================
 
 attemptSchema.pre("save", function () {
@@ -292,7 +290,7 @@ attemptSchema.pre("save", function () {
 // Export Model
 // ======================================================
 
-module.exports = mongoose.model(
+module.exports = createModel(
   "Attempt",
   attemptSchema
 );

@@ -11,7 +11,7 @@
         ? new URL(API_BASE_OVERRIDE, window.location.origin).href
         : isLocal
             ? "http://localhost:5000/api"
-            : new URL("api", appBase).href;
+            : new URL("api", new URL(appBase.href.replace(/client\/$/, ""))).href;
     window.FEDEscapeConfig = Object.freeze({
         apiBaseUrl: apiBase.replace(/\/+$/, ""),
         appBaseUrl: appBase.href

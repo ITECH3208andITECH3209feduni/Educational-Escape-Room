@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const { defineSchema, createModel, ObjectId } = require("../db/model");
 
 /*
  * Question Schema
  * Stores each question/puzzle inside an escape room.
  */
-const questionSchema = new mongoose.Schema(
+const questionSchema = defineSchema(
   {
     questionText: {
       type: String,
@@ -102,7 +102,7 @@ const questionSchema = new mongoose.Schema(
  * Room Schema
  * Represents an escape room created by an educator.
  */
-const roomSchema = new mongoose.Schema(
+const roomSchema = defineSchema(
   {
     name: {
       type: String,
@@ -154,7 +154,7 @@ const roomSchema = new mongoose.Schema(
      * User who created the room.
      */
     educator: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: ObjectId,
       ref: "User",
       required: true,
       index: true
@@ -299,4 +299,4 @@ roomSchema.pre("validate", function () {
 });
 
 
-module.exports = mongoose.model("Room", roomSchema);
+module.exports = createModel("Room", roomSchema);

@@ -280,11 +280,15 @@ function initialiseRegisterForm() {
     }
 
 
+    let registrationPending = false;
+    const registerButton = registerForm.querySelector('button[type="submit"]');
+    const registerStatus = document.getElementById("registerStatus");
     registerForm.addEventListener(
         "submit",
         async (event) => {
 
             event.preventDefault();
+            if (registrationPending) return;
 
 
             const fullName =
@@ -371,6 +375,16 @@ function initialiseRegisterForm() {
                 return;
             }
 
+
+            registrationPending = true;
+            const originalButtonText = registerButton.textContent;
+            registerButton.disabled = true;
+            registerButton.textContent = "Creating account…";
+            registerForm.setAttribute("aria-busy", "true");
+            registerStatus.textContent = "Creating your account and sending your verification email…";
+            const waitingMessage = setTimeout(() => {
+                registerStatus.textContent = "Still waiting for the email service. Please keep this page open; you do not need to click again.";
+            }, 10000);
 
             try {
 
@@ -462,6 +476,13 @@ function initialiseRegisterForm() {
                     "Unable to connect to the FedEscape server. " +
                     "Please make sure the backend is running."
                 );
+            } finally {
+                clearTimeout(waitingMessage);
+                registrationPending = false;
+                registerButton.disabled = false;
+                registerButton.textContent = originalButtonText;
+                registerForm.removeAttribute("aria-busy");
+                registerStatus.textContent = "";
             }
 
         }

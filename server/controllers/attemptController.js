@@ -3,7 +3,7 @@
 // Student attempts, answers, results and leaderboards
 // ======================================================
 
-const mongoose = require("mongoose");
+const { ObjectId } = require("mongodb");
 const Attempt = require("../models/Attempt");
 const Room = require("../models/Room");
 
@@ -12,7 +12,7 @@ const Room = require("../models/Room");
 // ======================================================
 
 const isValidObjectId = (id) => {
-  return mongoose.Types.ObjectId.isValid(id);
+  return ObjectId.isValid(id);
 };
 
 const normalizeAnswer = (value) => {

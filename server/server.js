@@ -4,9 +4,10 @@
 // ======================================================
 
 const express = require("express");
-const mongoose = require("mongoose");
+const database = require("./db/database");
 const cors = require("cors");
-require("dotenv").config();
+const path = require("node:path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 // ======================================================
 // Import Routes
@@ -21,6 +22,12 @@ const attemptRoutes = require("./routes/attemptRoutes");
 // ======================================================
 
 const app = express();
+const web = express.Router();
+const basePath = (process.env.APP_BASE_PATH || "").replace(/\/+$/, "");
+if (basePath && !/^\/[a-zA-Z0-9/_-]+$/.test(basePath)) {
+  throw new Error("APP_BASE_PATH must be a URL path such as /FEDEscape");
+}
+const clientDirectory = path.resolve(__dirname, "../client");
 
 const PORT = process.env.PORT || 5000;
 
@@ -105,32 +112,42 @@ app.use(
 // API Routes
 // ======================================================
 
-app.use("/api/auth", authRoutes);
-app.use("/api/rooms", roomRoutes);
-app.use("/api/attempts", attemptRoutes);
+web.use("/api/auth", authRoutes);
+web.use("/api/rooms", roomRoutes);
+web.use("/api/attempts", attemptRoutes);
 
 // ======================================================
 // Health Routes
 // ======================================================
 
-app.get("/", (req, res) => {
-  return res.status(200).json({
-    success: true,
-    message: "FedEscape backend is running"
-  });
-});
-
-app.get("/api/health", (req, res) => {
+web.get("/api/health", async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "FedEscape API is healthy",
     database:
-      mongoose.connection.readyState === 1
+      await database.health()
         ? "connected"
         : "disconnected",
     timestamp: new Date().toISOString()
   });
 });
+
+// Serve only frontend files; never expose the server directory or .env.
+web.get(["/js/config.js", "/client/js/config.js"], (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.type("application/javascript").send(
+    "window.FEDEscapeConfig = Object.freeze(" + JSON.stringify({
+      apiBaseUrl: `${basePath}/api`,
+      appBaseUrl: `${basePath}/`
+    }) + ");"
+  );
+});
+web.use("/api", (req, res) => res.status(404).json({ success: false, message: "API route not found" }));
+const staticOptions = { dotfiles: "deny", index: "index.html" };
+web.use(express.static(clientDirectory, staticOptions));
+// Keep existing /client links working while the new homepage is at the base URL.
+web.use("/client", express.static(clientDirectory, staticOptions));
+app.use(basePath || "/", web);
 
 // ======================================================
 // 404 Handler
@@ -190,7 +207,10 @@ const connectDatabase = async () => {
       );
     }
 
-    await mongoose.connect(process.env.MONGO_URI);
+    await database.connect(process.env.MONGO_URI);
+    for (const name of ["User", "Room", "Attempt"]) {
+      await require(`./models/${name}`).ensureIndexes();
+    }
 
     console.log("MongoDB connected successfully");
   } catch (error) {
@@ -233,7 +253,7 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (require.main === module) startServer();
 
 // ======================================================
 // Graceful Shutdown
@@ -259,8 +279,8 @@ const shutdown = async (signal) => {
       });
     }
 
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.connection.close();
+    {
+      await database.close();
       console.log("MongoDB connection closed");
     }
 

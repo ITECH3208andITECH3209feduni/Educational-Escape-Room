@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const { defineSchema, createModel, ObjectId } = require("../db/model");
 
 // ======================================================
 // USER SCHEMA
 // ======================================================
 
-const userSchema = new mongoose.Schema(
+const userSchema = defineSchema(
   {
     name: {
       type: String,
@@ -128,29 +128,13 @@ const userSchema = new mongoose.Schema(
 // REMOVE SENSITIVE FIELDS FROM JSON RESPONSES
 // ======================================================
 
-userSchema.methods.toJSON = function () {
-  const userObject = this.toObject();
-
-  // Password
-  delete userObject.password;
-
-  // Password reset information
-  delete userObject.passwordResetToken;
-  delete userObject.passwordResetExpires;
-
-  // Email verification information
-  delete userObject.emailVerificationToken;
-  delete userObject.emailVerificationExpires;
-
-  return userObject;
-};
-
+// Sensitive fields are excluded by db/model.js for all JSON responses.
 
 // ======================================================
 // EXPORT MODEL
 // ======================================================
 
-module.exports = mongoose.model(
+module.exports = createModel(
   "User",
   userSchema
 );

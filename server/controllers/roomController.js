@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const { ObjectId } = require("mongodb");
 const Room = require("../models/Room");
 
 
@@ -319,7 +319,7 @@ exports.getRoom = async (req, res) => {
         // --------------------------------------------------
 
         if (
-            !mongoose.Types.ObjectId.isValid(
+            !ObjectId.isValid(
                 req.params.id
             )
         ) {
@@ -512,7 +512,7 @@ exports.updateRoom = async (req, res) => {
         // --------------------------------------------------
 
         if (
-            !mongoose.Types.ObjectId.isValid(
+            !ObjectId.isValid(
                 req.params.id
             )
         ) {
@@ -648,7 +648,7 @@ exports.publishRoom = async (req, res) => {
         // --------------------------------------------------
 
         if (
-            !mongoose.Types.ObjectId.isValid(
+            !ObjectId.isValid(
                 req.params.id
             )
         ) {
@@ -770,7 +770,7 @@ exports.archiveRoom = async (req, res) => {
         // --------------------------------------------------
 
         if (
-            !mongoose.Types.ObjectId.isValid(
+            !ObjectId.isValid(
                 req.params.id
             )
         ) {
@@ -875,7 +875,7 @@ exports.deleteRoom = async (req, res) => {
         // --------------------------------------------------
 
         if (
-            !mongoose.Types.ObjectId.isValid(
+            !ObjectId.isValid(
                 req.params.id
             )
         ) {

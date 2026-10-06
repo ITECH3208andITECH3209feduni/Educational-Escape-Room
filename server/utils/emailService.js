@@ -40,7 +40,7 @@ const sendVerificationEmail = async (
   const transporter = createTransporter();
 
   const clientUrl =
-    (process.env.CLIENT_URL || "http://localhost:5500").replace(/\/+$/, "");
+    (process.env.CLIENT_URL || `http://localhost:${process.env.PORT || 5000}${(process.env.APP_BASE_PATH || "").replace(/\/+$/, "")}`).replace(/\/+$/, "");
 
   const verificationUrl =
     `${clientUrl}/verify-email.html?token=${verificationToken}`;
