@@ -1,24 +1,9 @@
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const { createSession, destroySession, random } = require("../middleware/session");
 const crypto = require("crypto");
 const User = require("../models/User");
 const { sendVerificationEmail } = require("../utils/emailService");
-// ======================================================
-// Generate JWT
-// ======================================================
-const generateToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      role: user.role
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: process.env.JWT_EXPIRES_IN || "1d"
-    }
-  );
-};
-
+const resetQueue = require("../utils/passwordResetQueue");
 // ======================================================
 // REGISTER
 // POST /api/auth/register
@@ -111,7 +96,7 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Do not generate a JWT yet.
+    // Do not create an authenticated session yet.
     // The user must verify their email before logging in.
     return res.status(201).json({
       success: true,
@@ -225,7 +210,7 @@ const loginUser = async (req, res) => {
 
     // Password is select:false in User.js,
     // therefore explicitly request it here.
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password +sessionVersion");
 
     if (!user) {
       return res.status(401).json({
@@ -266,12 +251,13 @@ const loginUser = async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
-    const token = generateToken(user);
+    const session = await createSession(req, res, user);
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      token,
+      csrfToken: session.csrfToken,
+      expiresAt: session.absoluteExpiresAt,
       user: {
         id: user._id,
         name: user.name,
@@ -394,7 +380,7 @@ const changePassword = async (req, res) => {
       });
     }
 
-    const user = await User.findById(req.user.id).select("+password");
+    const user = await User.findById(req.user.id).select("+password +sessionVersion");
 
     if (!user) {
       return res.status(404).json({
@@ -418,11 +404,15 @@ const changePassword = async (req, res) => {
     const salt = await bcrypt.genSalt(12);
     user.password = await bcrypt.hash(newPassword, salt);
 
+    user.sessionVersion = random();
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
     await user.save();
+    await destroySession(req, res);
 
     return res.status(200).json({
       success: true,
-      message: "Password changed successfully"
+      message: "Password changed successfully. Please log in again."
     });
   } catch (error) {
     console.error("Change password error:", error);
@@ -439,62 +429,13 @@ const changePassword = async (req, res) => {
 // POST /api/auth/forgot-password
 // ======================================================
 const forgotPassword = async (req, res) => {
-  try {
-    let { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required"
-      });
-    }
-
-    email = email.trim().toLowerCase();
-
-    const user = await User.findOne({ email });
-
-    // Do not reveal whether an email exists.
-    if (!user) {
-      return res.status(200).json({
-        success: true,
-        message:
-          "If an account exists for that email, password reset instructions will be sent."
-      });
-    }
-
-    const resetToken = crypto.randomBytes(32).toString("hex");
-
-    // Store a hash rather than the raw reset token
-    user.passwordResetToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
-
-    user.passwordResetExpires =
-      Date.now() + 15 * 60 * 1000;
-
-    await user.save();
-
-    /*
-      Later, an email service can send resetToken to the user.
-
-      IMPORTANT:
-      Do not return resetToken in production.
-    */
-
-    return res.status(200).json({
-      success: true,
-      message:
-        "If an account exists for that email, password reset instructions will be sent."
-    });
-  } catch (error) {
-    console.error("Forgot password error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server error while processing password reset"
-    });
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, message: "Enter a valid email address." });
   }
+  await resetQueue.enqueueReset(email);
+  return res.status(200).json({ success: true,
+    message: "If an active, verified account uses that email, a password reset link will be sent shortly. Please check your inbox and spam folder." });
 };
 
 // ======================================================
@@ -505,11 +446,11 @@ const resetPassword = async (req, res) => {
   try {
     const { password } = req.body;
 
-    if (!password || password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must contain at least 6 characters"
-      });
+    if (typeof password !== "string" || password.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must contain at least 6 characters." });
+    }
+    if (Buffer.byteLength(password, "utf8") > 72) {
+      return res.status(400).json({ success: false, message: "This password is too long. Please use a shorter passphrase." });
     }
 
     const hashedToken = crypto
@@ -524,24 +465,31 @@ const resetPassword = async (req, res) => {
       "+password +passwordResetToken +passwordResetExpires"
     );
 
-    if (!user) {
+    if (!user || !user.emailVerified || user.accountStatus !== "active") {
       return res.status(400).json({
         success: false,
         message: "Password reset token is invalid or has expired"
       });
     }
 
-    const salt = await bcrypt.genSalt(12);
-    user.password = await bcrypt.hash(password, salt);
-
-    user.passwordResetToken = null;
-    user.passwordResetExpires = null;
-
-    await user.save();
+    const newHash = await bcrypt.hash(password, 12);
+    // Consume the token in the same atomic write as the new password/version.
+    // Parallel submissions or a newer reset email can never reuse this token.
+    const result = await User.collection().updateOne({
+      _id: user._id, passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: new Date() }, emailVerified: true,
+      $or: [{ accountStatus: "active" }, { accountStatus: { $exists: false } }]
+    }, { $set: { password: newHash, sessionVersion: random(), passwordResetToken: null,
+      passwordResetExpires: null, updatedAt: new Date() }, $inc: { __v: 1 } });
+    if (!result.matchedCount) return res.status(400).json({ success: false, message: "Password reset token is invalid or has expired." });
+    await destroySession(req, res);
+    // A notification failure must not claim that an already-committed reset failed.
+    try { await resetQueue.enqueueChanged(user); }
+    catch (error) { console.error("Password-change notification could not be queued:", error.code || error.name); }
 
     return res.status(200).json({
       success: true,
-      message: "Password reset successfully"
+      message: "Password reset successfully. Please log in again."
     });
   } catch (error) {
     console.error("Reset password error:", error);
@@ -558,13 +506,7 @@ const resetPassword = async (req, res) => {
 // POST /api/auth/logout
 // ======================================================
 const logoutUser = async (req, res) => {
-  /*
-    JWT authentication is stateless.
-
-    The frontend will remove its stored token when the
-    user logs out. Token revocation could be added later
-    if the project requires it.
-  */
+  await destroySession(req, res);
 
   return res.status(200).json({
     success: true,

@@ -29,7 +29,7 @@ async function loadPublishedRooms() {
 
     try {
 
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${window.FEDEscapeConfig.apiBaseUrl}/rooms`
         );
 

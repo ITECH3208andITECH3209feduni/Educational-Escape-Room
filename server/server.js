@@ -5,7 +5,9 @@
 
 const express = require("express");
 const database = require("./db/database");
-const cors = require("cors");
+const { loadSession, csrfProtection, ensureSecurityIndexes } = require("./middleware/session");
+const securityHeaders = require("./middleware/securityHeaders");
+const resetQueue = require("./utils/passwordResetQueue");
 const path = require("node:path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
@@ -37,59 +39,25 @@ const PORT = process.env.PORT || 5000;
 
 app.disable("x-powered-by");
 
-if (process.env.NODE_ENV === "production") {
-  app.set("trust proxy", 1);
-}
-
-// ======================================================
-// CORS Configuration
-// ======================================================
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:5500",
-  "http://127.0.0.1:5500",
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow PowerShell, Postman and other requests
-      // that do not send an Origin header.
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      // Development
-      if (process.env.NODE_ENV !== "production") {
-        return callback(null, true);
-      }
-
-      // Production
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
-
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS"
-    ],
-
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization"
-    ]
-  })
-);
+// Trust only the actual proxy addresses, never a client-supplied hop count.
+// Default false is safe for direct/local connections. Evan must set the real proxy CIDR.
+app.set("trust proxy", process.env.TRUST_PROXY ? process.env.TRUST_PROXY.split(",").map(s => s.trim()) : false);
+app.use(securityHeaders);
+// Serve frontend and API from one origin; cross-origin credentialed access is not enabled.
+app.use((req, res, next) => {
+  if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+    const configured = process.env.CLIENT_URL || `http://localhost:${PORT}`;
+    const allowed = new Set([new URL(configured).origin]);
+    if (process.env.NODE_ENV !== "production") {
+      allowed.add(`http://localhost:${PORT}`);
+      allowed.add(`http://127.0.0.1:${PORT}`);
+    }
+    if (req.get("Sec-Fetch-Site") === "cross-site" || (req.get("Origin") && !allowed.has(req.get("Origin")))) {
+      return res.status(403).json({ success: false, message: "Cross-origin request blocked." });
+    }
+  }
+  next();
+});
 
 // ======================================================
 // Request Body Middleware
@@ -112,6 +80,7 @@ app.use(
 // API Routes
 // ======================================================
 
+web.use("/api", (req, res, next) => { res.set("Cache-Control", "no-store"); next(); }, loadSession, csrfProtection);
 web.use("/api/auth", authRoutes);
 web.use("/api/rooms", roomRoutes);
 web.use("/api/attempts", attemptRoutes);
@@ -179,12 +148,6 @@ app.use((err, req, res, next) => {
     });
   }
 
-  if (err.message === "Not allowed by CORS") {
-    return res.status(403).json({
-      success: false,
-      message: "Request blocked by CORS policy"
-    });
-  }
 
   return res.status(err.status || 500).json({
     success: false,
@@ -212,6 +175,8 @@ const connectDatabase = async () => {
       await require(`./models/${name}`).ensureIndexes();
     }
 
+    await ensureSecurityIndexes();
+    await resetQueue.ensureIndexes();
     console.log("MongoDB connected successfully");
   } catch (error) {
     console.error(
@@ -232,6 +197,7 @@ let server;
 const startServer = async () => {
   try {
     await connectDatabase();
+    resetQueue.start();
 
     server = app.listen(PORT, () => {
       console.log("======================================");
@@ -280,6 +246,7 @@ const shutdown = async (signal) => {
     }
 
     {
+      await resetQueue.stop();
       await database.close();
       console.log("MongoDB connection closed");
     }

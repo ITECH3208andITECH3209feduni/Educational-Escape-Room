@@ -19,7 +19,7 @@ document.addEventListener(
     "DOMContentLoaded",
     async () => {
 
-        setupLogout();
+        
         setupRoomSelector();
         setupRetryButton();
 
@@ -39,11 +39,9 @@ document.addEventListener(
    AUTHENTICATION
    ========================================================== */
 
-function getToken() {
+function hasSessionHint() {
 
-    return localStorage.getItem(
-        "fedEscapeToken"
-    );
+    return window.FEDEscapeSession.hasSessionHint();
 }
 
 
@@ -59,17 +57,17 @@ function getAuthHeaders() {
 
     return {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${getToken()}`
+        
     };
 }
 
 
 function checkEducatorAuthentication() {
 
-    const token = getToken();
+    const sessionHint = hasSessionHint();
     const role = getUserRole();
 
-    if (!token) {
+    if (!sessionHint) {
 
         alert(
             "Please log in to view the educator leaderboard."
@@ -168,7 +166,7 @@ async function loadEducatorRooms() {
 
     try {
 
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${EDUCATOR_LEADERBOARD_API_BASE_URL}/rooms/educator/my-rooms`,
             {
                 method: "GET",
@@ -460,7 +458,7 @@ async function loadLeaderboard(roomId) {
 
     try {
 
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${EDUCATOR_LEADERBOARD_API_BASE_URL}/attempts/room/${encodeURIComponent(roomId)}/leaderboard`,
             {
                 method: "GET",
@@ -1416,32 +1414,7 @@ function setupRetryButton() {
    LOGOUT
    ========================================================== */
 
-function setupLogout() {
-
-    const logoutButton =
-        document.getElementById(
-            "logoutButton"
-        );
-
-
-    if (!logoutButton) {
-        return;
-    }
-
-
-    logoutButton.addEventListener(
-        "click",
-        event => {
-
-            event.preventDefault();
-
-            clearAuthentication();
-
-            window.location.href =
-                "login.html";
-        }
-    );
-}
+// Logout is handled centrally by session.js.
 
 
 function clearAuthentication() {

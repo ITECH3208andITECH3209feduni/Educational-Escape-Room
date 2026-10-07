@@ -5,6 +5,7 @@ test('registration shows progress, blocks duplicates and restores button after f
  const form={querySelector:()=>button,addEventListener:(event,fn)=>handler=fn,setAttribute(){},removeAttribute(){}};
  const fields={registerForm:form,registerStatus:status,registerName:{value:'Test User'},registerEmail:{value:'test@example.invalid'},registerPassword:{value:'testpass'},registerConfirmPassword:{value:'testpass'},registerRole:{value:'student'}};
  const context={window:{FEDEscapeConfig:{apiBaseUrl:'/api'},location:{}},document:{addEventListener(){},getElementById:id=>fields[id]},setTimeout,clearTimeout,alert(){},console,fetch:()=>{requests++;return new Promise(r=>resolve=r)}};
+ context.window.FEDEscapeSession={fetch:context.fetch};
  vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../../client/js/script.js'),'utf8'),context);vm.runInContext('initialiseRegisterForm()',context);
  const pending=handler({preventDefault(){}});assert.equal(button.disabled,true);assert.match(status.textContent,/sending/);
  await handler({preventDefault(){}});assert.equal(requests,1);

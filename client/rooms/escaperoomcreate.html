@@ -71,13 +71,13 @@
                 </li>
 
                 <li>
-                    <a href="#" onclick="showPage('results'); return false;"></a>
+                    <a href="#" data-page="results">
                         Results
                     </a>
                 </li>
 
                 <li>
-                    <a href="../index.html">
+                    <a href="../index.html" data-logout>
                         Logout
                     </a>
                 </li>
@@ -132,7 +132,7 @@
             <button
                 type="button"
                 class="primary-btn dashboard-hero-button"
-                onclick="showPage('rooms')"
+                data-page="rooms"
             >
                 View Rooms
             </button>
@@ -140,7 +140,7 @@
             <button
                 type="button"
                 class="primary-btn dashboard-hero-button"
-                onclick="showPage('create')"
+                data-page="create"
             >
                 + Create Room
             </button>
@@ -148,7 +148,7 @@
             <button
                 type="button"
                 class="primary-btn dashboard-hero-button"
-                onclick="showPage('results')"
+                data-page="results"
             >
                 View Results
             </button>
@@ -513,7 +513,7 @@
                     <button
                         type="button"
                         class="secondary-btn"
-                        onclick="showPage('rooms')"
+                        data-page="rooms"
                     >
                         Cancel
                     </button>
@@ -580,6 +580,7 @@
     =================================================== -->
 
     <script src="../js/config.js"></script>
+    <script src="../js/session.js"></script>
     <script src="../js/educreateroom.js"></script>
 
     <script src="../js/compact-room-builder.js"></script>

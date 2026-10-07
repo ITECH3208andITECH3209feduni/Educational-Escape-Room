@@ -40,8 +40,14 @@ module.exports = function memoryDatabase() {
   command: async()=>({ok:1}), dropDatabase:async()=>collections.clear(),
   collection(name) {
    if(collections.has(name))return collections.get(name);
-   const rows=[];const unique=new Set();
+   const rows=[];const unique=new Set(["_id"]);
    function check(row,ignore) { for(const k of unique) if(rows.some(r=>r!==ignore&&equal(r[k],row[k]))) {const e=new Error('duplicate key');e.code=11000;throw e;} }
+   function applyUpdate(row,update) {
+      const next={...row,...clone(update.$set||{})};
+      for(const [k,v]of Object.entries(update.$inc||{})) next[k]=(next[k]||0)+v;
+      for(const k of Object.keys(update.$unset||{}))delete next[k];check(next,row);
+      for(const k of Object.keys(row))delete row[k];Object.assign(row,next);
+   }
    const api={
     createIndex:async(fields,opts={})=>{if(opts.unique)for(const k of Object.keys(fields))unique.add(k);return 'test_index';},
     insertOne:async row=>{check(row);rows.push(clone(row));return {insertedId:row._id};},
@@ -53,12 +59,20 @@ module.exports = function memoryDatabase() {
     async findOne(filter={},opts={}) { return (await api.find(filter,opts).toArray())[0]||null; },
     countDocuments:async filter=>rows.filter(r=>matches(r,filter)).length,
     findOneAndDelete:async filter=>{const i=rows.findIndex(r=>matches(r,filter));return i<0?null:rows.splice(i,1)[0];},
-    updateOne:async(filter,update)=>{
-      const row=rows.find(r=>matches(r,filter));if(!row)return {matchedCount:0};
-      const next={...row,...clone(update.$set||{})};
-      for(const [k,v]of Object.entries(update.$inc||{})) next[k]=(next[k]||0)+v;
-      for(const k of Object.keys(update.$unset||{}))delete next[k];check(next,row);
-      for(const k of Object.keys(row))delete row[k];Object.assign(row,next);return {matchedCount:1};
+    deleteOne:async filter=>{const i=rows.findIndex(r=>matches(r,filter));if(i<0)return {deletedCount:0};rows.splice(i,1);return {deletedCount:1};},
+    deleteMany:async filter=>{let count=0;for(let i=rows.length-1;i>=0;i--)if(matches(rows[i],filter)){rows.splice(i,1);count++;}return {deletedCount:count};},
+    findOneAndUpdate:async(filter,update,options={})=>{
+      const found=rows.filter(r=>matches(r,filter));
+      if(options.sort)found.sort((a,b)=>{for(const [k,d]of Object.entries(options.sort)){if(key(a[k])<key(b[k]))return -d;if(key(a[k])>key(b[k]))return d;}return 0;});
+      const row=found[0];if(!row)return null;
+      const before=clone(row);applyUpdate(row,update);
+      return options.returnDocument==='after'?clone(row):before;
+    },
+    updateOne:async(filter,update,options={})=>{
+      let row=rows.find(r=>matches(r,filter));
+      if(!row && options.upsert) {row={...clone(filter),...clone(update.$setOnInsert||{})};check(row);rows.push(row);}
+      if(!row)return {matchedCount:0};
+      applyUpdate(row,update);return {matchedCount:1};
     }
    };collections.set(name,api);return api;
   }

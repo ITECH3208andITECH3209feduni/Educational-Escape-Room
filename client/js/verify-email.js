@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${API_BASE_URL}/auth/verify-email/${encodeURIComponent(token)}`
         );
 

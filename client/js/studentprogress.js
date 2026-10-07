@@ -19,7 +19,7 @@ let selectedStudentId = "";
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    setupLogout();
+    
     setupStudentSelector();
     setupRetryButton();
 
@@ -35,8 +35,8 @@ document.addEventListener("DOMContentLoaded", async () => {
    AUTHENTICATION
    ========================================================== */
 
-function getToken() {
-    return localStorage.getItem("fedEscapeToken");
+function hasSessionHint() {
+    return window.FEDEscapeSession.hasSessionHint();
 }
 
 
@@ -48,17 +48,17 @@ function getUserRole() {
 function getAuthHeaders() {
     return {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`
+        
     };
 }
 
 
 function checkEducatorAuthentication() {
 
-    const token = getToken();
+    const sessionHint = hasSessionHint();
     const role = getUserRole();
 
-    if (!token) {
+    if (!sessionHint) {
 
         alert(
             "Please log in to view student progress."
@@ -133,7 +133,7 @@ async function loadStudentProgressData() {
            STEP 1 — Load educator rooms
            ------------------------------------------ */
 
-        const roomResponse = await fetch(
+        const roomResponse = await window.FEDEscapeSession.fetch(
             `${STUDENT_PROGRESS_API_BASE_URL}/rooms/educator/my-rooms`,
             {
                 method: "GET",
@@ -191,7 +191,7 @@ async function loadStudentProgressData() {
                         try {
 
                             const response =
-                                await fetch(
+                                await window.FEDEscapeSession.fetch(
                                     `${STUDENT_PROGRESS_API_BASE_URL}/attempts/room/${encodeURIComponent(room._id)}/results`,
                                     {
                                         method: "GET",
@@ -1384,32 +1384,7 @@ function setupRetryButton() {
    LOGOUT
    ========================================================== */
 
-function setupLogout() {
-
-    const button =
-        document.getElementById(
-            "logoutButton"
-        );
-
-
-    if (!button) {
-        return;
-    }
-
-
-    button.addEventListener(
-        "click",
-        event => {
-
-            event.preventDefault();
-
-            clearAuthentication();
-
-            window.location.href =
-                "login.html";
-        }
-    );
-}
+// Logout is handled centrally by session.js.
 
 
 function clearAuthentication() {

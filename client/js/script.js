@@ -81,7 +81,7 @@ function initialiseLoginForm() {
                 // Send login request to backend
                 // --------------------------------------
 
-                const response = await fetch(
+                const response = await window.FEDEscapeSession.fetch(
                     `${API_BASE_URL}/auth/login`,
                     {
                         method: "POST",
@@ -119,34 +119,7 @@ function initialiseLoginForm() {
 
 
                 // --------------------------------------
-                // Make sure token was returned
-                // --------------------------------------
-
-                if (!data.token) {
-
-                    console.error(
-                        "Login response did not contain a token:",
-                        data
-                    );
-
-                    alert(
-                        "Login succeeded but no authentication token was returned."
-                    );
-
-                    return;
-                }
-
-
-                // --------------------------------------
-                // Store authentication information
-                // --------------------------------------
-
-                localStorage.setItem(
-                    "fedEscapeToken",
-                    data.token
-                );
-
-
+                // Authentication stays in an HttpOnly cookie; store only UI details.
                 localStorage.setItem(
                     "fedEscapeLoggedIn",
                     "true"
@@ -392,7 +365,7 @@ function initialiseRegisterForm() {
                 // Send registration to backend
                 // --------------------------------------
 
-                const response = await fetch(
+                const response = await window.FEDEscapeSession.fetch(
                     `${API_BASE_URL}/auth/register`,
                     {
                         method: "POST",

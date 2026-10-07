@@ -101,7 +101,7 @@ exports.createRoom = async (req, res) => {
             availableFrom,
             availableUntil,
 
-            // Educator comes from authenticated JWT user.
+            // Educator comes from authenticated session user.
             educator: req.user.id
         });
 

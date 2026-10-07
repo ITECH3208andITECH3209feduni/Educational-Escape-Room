@@ -104,13 +104,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function startNewMission(roomId) {
 
-    const token =
-        localStorage.getItem(
-            "fedEscapeToken"
-        );
+    const sessionHint =
+        window.FEDEscapeSession.hasSessionHint();
 
 
-    if (!token) {
+    if (!sessionHint) {
 
         alert(
             "Please log in before starting a mission."
@@ -135,15 +133,14 @@ async function startNewMission(roomId) {
 
     try {
 
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${GAME_API_BASE_URL}/attempts/start/${roomId}`,
             {
                 method: "POST",
 
                 headers: {
 
-                    "Authorization":
-                        `Bearer ${token}`,
+                    
 
                     "Content-Type":
                         "application/json"
@@ -316,13 +313,11 @@ async function startNewMission(roomId) {
 
 async function loadRoom(roomId) {
 
-    const token =
-        localStorage.getItem(
-            "fedEscapeToken"
-        );
+    const sessionHint =
+        window.FEDEscapeSession.hasSessionHint();
 
 
-    if (!token) {
+    if (!sessionHint) {
 
         alert(
             "Your login session is missing. Please log in again."
@@ -339,15 +334,14 @@ async function loadRoom(roomId) {
 
     try {
 
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${GAME_API_BASE_URL}/rooms/${roomId}`,
             {
                 method: "GET",
 
                 headers: {
 
-                    "Authorization":
-                        `Bearer ${token}`
+                    
                 }
             }
         );
@@ -1064,10 +1058,8 @@ async function submitAnswer(room) {
     }
 
 
-    const token =
-        localStorage.getItem(
-            "fedEscapeToken"
-        );
+    const sessionHint =
+        window.FEDEscapeSession.hasSessionHint();
 
 
     const attemptId =
@@ -1076,7 +1068,7 @@ async function submitAnswer(room) {
         );
 
 
-    if (!token) {
+    if (!sessionHint) {
 
         alert(
             "Your login session is missing. Please log in again."
@@ -1171,15 +1163,14 @@ async function submitAnswer(room) {
 
     try {
 
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${GAME_API_BASE_URL}/attempts/${attemptId}/answer`,
             {
                 method: "PATCH",
 
                 headers: {
 
-                    "Authorization":
-                        `Bearer ${token}`,
+                    
 
                     "Content-Type":
                         "application/json"
@@ -1459,10 +1450,8 @@ async function completeMission(room) {
     }
 
 
-    const token =
-        localStorage.getItem(
-            "fedEscapeToken"
-        );
+    const sessionHint =
+        window.FEDEscapeSession.hasSessionHint();
 
 
     const attemptId =
@@ -1472,7 +1461,7 @@ async function completeMission(room) {
 
 
     if (
-        !token ||
+        !sessionHint ||
         !attemptId
     ) {
 
@@ -1495,15 +1484,14 @@ async function completeMission(room) {
 
     try {
 
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${GAME_API_BASE_URL}/attempts/${attemptId}/complete`,
             {
                 method: "PATCH",
 
                 headers: {
 
-                    "Authorization":
-                        `Bearer ${token}`,
+                    
 
                     "Content-Type":
                         "application/json"

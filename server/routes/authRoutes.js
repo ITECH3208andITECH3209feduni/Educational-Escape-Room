@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const { csrfToken } = require("../middleware/session");
+const { rateLimit } = require("../middleware/rateLimit");
+router.get("/csrf", rateLimit("csrf", { ip: 100 }), csrfToken);
 
 const {
   registerUser,
@@ -22,23 +25,23 @@ const {
 // ======================================================
 
 // Register new account
-router.post("/register", registerUser);
+router.post("/register", rateLimit("register", { ip: 10, account: 3, windowMs: 60 * 60 * 1000 }), registerUser);
 
 // Verify email address
-router.get("/verify-email/:token", verifyEmail);
+router.get("/verify-email/:token", rateLimit("verify-email"), verifyEmail);
 
 // Login
-router.post("/login", loginUser);
+router.post("/login", rateLimit("login", { ip: 60, account: 15 }), loginUser);
 
 // Request password reset
-router.post("/forgot-password", forgotPassword);
+router.post("/forgot-password", rateLimit("forgot-password", { ip: 10, account: 3 }), forgotPassword);
 
 // Reset password using token
-router.post("/reset-password/:token", resetPassword);
+router.post("/reset-password/:token", rateLimit("reset-password", { ip: 10, account: 5 }), resetPassword);
 
 // ======================================================
 // PROTECTED AUTHENTICATION ROUTES
-// Valid JWT required
+// Valid session required
 // ======================================================
 
 // Get currently logged-in user
@@ -51,20 +54,21 @@ router.patch("/profile", protect, updateProfile);
 router.patch(
   "/change-password",
   protect,
+  rateLimit("change-password", { ip: 10 }),
   changePassword
 );
 
 // Logout
-router.post("/logout", protect, logoutUser);
+router.post("/logout", logoutUser);
 
 // ======================================================
-// JWT TEST ROUTE
+// session TEST ROUTE
 // ======================================================
 
 router.get("/protected-test", protect, (req, res) => {
   res.status(200).json({
     success: true,
-    message: "JWT authentication is working correctly.",
+    message: "session authentication is working correctly.",
     user: req.user
   });
 });

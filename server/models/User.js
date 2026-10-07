@@ -33,6 +33,8 @@ const userSchema = defineSchema(
       select: false
     },
 
+    sessionVersion: { type: String, default: "", select: false },
+
     role: {
       type: String,
       enum: ["student", "educator", "admin"],

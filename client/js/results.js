@@ -35,7 +35,7 @@ document.addEventListener(
         }
 
 
-        setupLogout();
+        
 
 
         const authenticated =
@@ -62,10 +62,8 @@ document.addEventListener(
 
 function checkStudentAuthentication() {
 
-    const token =
-        localStorage.getItem(
-            "fedEscapeToken"
-        );
+    const sessionHint =
+        window.FEDEscapeSession.hasSessionHint();
 
 
     const role =
@@ -74,7 +72,7 @@ function checkStudentAuthentication() {
         );
 
 
-    if (!token) {
+    if (!sessionHint) {
 
         alert(
             "Please log in to view your results."
@@ -119,10 +117,8 @@ function checkStudentAuthentication() {
 
 async function loadStudentResults() {
 
-    const token =
-        localStorage.getItem(
-            "fedEscapeToken"
-        );
+    const sessionHint =
+        window.FEDEscapeSession.hasSessionHint();
 
 
     showLoadingState();
@@ -130,15 +126,14 @@ async function loadStudentResults() {
 
     try {
 
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${RESULTS_API_BASE_URL}/attempts/my-results`,
             {
                 method: "GET",
 
                 headers: {
 
-                    "Authorization":
-                        `Bearer ${token}`
+                    
                 }
             }
         );
@@ -776,10 +771,8 @@ function setupLeaderboardSelector() {
 
 async function loadLeaderboard(roomId) {
 
-    const token =
-        localStorage.getItem(
-            "fedEscapeToken"
-        );
+    const sessionHint =
+        window.FEDEscapeSession.hasSessionHint();
 
 
     const leaderboard =
@@ -803,15 +796,14 @@ async function loadLeaderboard(roomId) {
 
     try {
 
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${RESULTS_API_BASE_URL}/attempts/room/${roomId}/leaderboard`,
             {
                 method: "GET",
 
                 headers: {
 
-                    "Authorization":
-                        `Bearer ${token}`
+                    
                 }
             }
         );
@@ -1522,67 +1514,7 @@ function hideNoLeaderboard() {
 // LOGOUT
 // ======================================================
 
-function setupLogout() {
-
-    const logoutButton =
-        document.getElementById(
-            "logoutButton"
-        );
-
-
-    if (!logoutButton) {
-
-        return;
-    }
-
-
-    logoutButton.addEventListener(
-        "click",
-        (event) => {
-
-            event.preventDefault();
-
-
-            localStorage.removeItem(
-                "fedEscapeToken"
-            );
-
-
-            localStorage.removeItem(
-                "fedEscapeLoggedIn"
-            );
-
-
-            localStorage.removeItem(
-                "fedEscapeUserId"
-            );
-
-
-            localStorage.removeItem(
-                "fedEscapeUserName"
-            );
-
-
-            localStorage.removeItem(
-                "fedEscapeUserEmail"
-            );
-
-
-            localStorage.removeItem(
-                "fedEscapeUserRole"
-            );
-
-
-            localStorage.removeItem(
-                "fedEscapeAttemptId"
-            );
-
-
-            window.location.href =
-                "login.html";
-        }
-    );
-}
+// Logout is handled centrally by session.js.
 
 
 // ======================================================

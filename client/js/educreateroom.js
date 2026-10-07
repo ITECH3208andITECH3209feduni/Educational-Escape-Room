@@ -13,8 +13,8 @@ let rooms = [];
    AUTHENTICATION
    ========================================================== */
 
-function getToken() {
-    return localStorage.getItem("fedEscapeToken");
+function hasSessionHint() {
+    return window.FEDEscapeSession.hasSessionHint();
 }
 
 function getUserRole() {
@@ -24,15 +24,15 @@ function getUserRole() {
 function getAuthHeaders() {
     return {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`
+        
     };
 }
 
 function checkEducatorAuthentication() {
-    const token = getToken();
+    const sessionHint = hasSessionHint();
     const role = getUserRole();
 
-    if (!token) {
+    if (!sessionHint) {
         alert("Please log in to continue.");
         window.location.href = "../login.html";
         return false;
@@ -125,7 +125,7 @@ async function loadRooms() {
     }
 
     try {
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${API_BASE_URL}/rooms/educator/my-rooms`,
             {
                 method: "GET",
@@ -281,7 +281,7 @@ function displayRooms() {
                 <button
                     type="button"
                     class="archive-btn"
-                    onclick="archiveRoom('${roomId}')"
+                    data-room-action="archiveRoom" data-room-id="${escapeHtml(roomId)}"
                 >
                     Archive
                 </button>
@@ -291,7 +291,7 @@ function displayRooms() {
                 <button
                     type="button"
                     class="publish-btn"
-                    onclick="publishRoom('${roomId}')"
+                    data-room-action="publishRoom" data-room-id="${escapeHtml(roomId)}"
                 >
                     Publish
                 </button>
@@ -337,7 +337,7 @@ function displayRooms() {
                     <button
                         type="button"
                         class="edit-btn"
-                        onclick="editRoom('${roomId}')"
+                        data-room-action="editRoom" data-room-id="${escapeHtml(roomId)}"
                     >
                         Edit
                     </button>
@@ -347,7 +347,7 @@ function displayRooms() {
                     <button
                         type="button"
                         class="delete-btn"
-                        onclick="deleteRoom('${roomId}')"
+                        data-room-action="deleteRoom" data-room-id="${escapeHtml(roomId)}"
                     >
                         Delete
                     </button>
@@ -523,7 +523,7 @@ async function saveRoom(event) {
                 roomId ? "Saving Changes..." : "Creating Room...";
         }
 
-        const response = await fetch(url, {
+        const response = await window.FEDEscapeSession.fetch(url, {
             method,
             headers: getAuthHeaders(),
             body: JSON.stringify(body)
@@ -748,7 +748,7 @@ async function deleteRoom(id) {
     }
 
     try {
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${API_BASE_URL}/rooms/${id}`,
             {
                 method: "DELETE",
@@ -815,7 +815,7 @@ async function publishRoom(id) {
     }
 
     try {
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${API_BASE_URL}/rooms/${id}/publish`,
             {
                 method: "PATCH",
@@ -867,7 +867,7 @@ async function archiveRoom(id) {
     }
 
     try {
-        const response = await fetch(
+        const response = await window.FEDEscapeSession.fetch(
             `${API_BASE_URL}/rooms/${id}/archive`,
             {
                 method: "PATCH",
@@ -1931,7 +1931,7 @@ async function displayResults() {
 
     try {
         // Refresh the room list so newly created and archived rooms are included.
-        const response = await fetch(`${API_BASE_URL}/rooms/educator/my-rooms`, {
+        const response = await window.FEDEscapeSession.fetch(`${API_BASE_URL}/rooms/educator/my-rooms`, {
             headers: getAuthHeaders()
         });
         if (!isCurrent()) return;
@@ -1952,7 +1952,7 @@ async function displayResults() {
         let authenticationFailed = false;
         const roomResults = await Promise.all(resultRooms.map(async room => {
             try {
-                const resultResponse = await fetch(
+                const resultResponse = await window.FEDEscapeSession.fetch(
                     `${API_BASE_URL}/attempts/room/${encodeURIComponent(room._id)}/results`,
                     { headers: getAuthHeaders() }
                 );
@@ -1978,7 +1978,7 @@ async function displayResults() {
         renderEducatorResults(roomResults);
     } catch (error) {
         if (!isCurrent()) return;
-        container.innerHTML = `<div class="educator-result-card" role="alert"><h3>Unable to Load Student Results</h3><p>${escapeHtml(error.message)}</p><button type="button" onclick="displayResults()">Try Again</button></div>`;
+        container.innerHTML = `<div class="educator-result-card" role="alert"><h3>Unable to Load Student Results</h3><p>${escapeHtml(error.message)}</p><button type="button" data-room-action="displayResults">Try Again</button></div>`;
     }
 }
 
@@ -2012,7 +2012,7 @@ function renderEducatorResults(roomResults) {
         </div><p>Average score includes completed attempts only.</p>`;
     if (!successful.length) html = "";
     if (failures.length) {
-        html += `<p role="alert">${successful.length ? "Partial results: totals include only rooms loaded successfully." : "Results could not be loaded for any room; totals are unavailable."} ${failures.length} room(s) failed to load.</p><button type="button" onclick="displayResults()">Retry Results</button>`;
+        html += `<p role="alert">${successful.length ? "Partial results: totals include only rooms loaded successfully." : "Results could not be loaded for any room; totals are unavailable."} ${failures.length} room(s) failed to load.</p><button type="button" data-room-action="displayResults">Retry Results</button>`;
     } else if (!attempts.length) {
         html += '<p>No student attempts yet. Results will appear after students begin playing your rooms.</p>';
     }
@@ -2145,7 +2145,7 @@ function enhanceExistingHTML() {
     /* ---------- Main navigation buttons ---------- */
 
     document.querySelectorAll(
-        'button[onclick*="showPage"]'
+        'button[data-page]'
     ).forEach(button => {
 
         button.classList.add(
@@ -2167,7 +2167,7 @@ function enhanceExistingHTML() {
 
     const addQuestionButton =
         getRoomFormElement("addQuestionButton") || document.querySelector(
-            'button[onclick*="addQuestion"]'
+            'button#addQuestionButton'
         );
 
     if (addQuestionButton) {
@@ -2320,14 +2320,7 @@ document.addEventListener(
         const addQuestionButton =
             getRoomFormElement("addQuestionButton");
 
-        /*
-            Only attach this event when the HTML button
-            does not already use inline onclick.
-        */
-        if (
-            addQuestionButton &&
-            !addQuestionButton.getAttribute("onclick")
-        ) {
+        if (addQuestionButton) {
             addQuestionButton.addEventListener(
                 "click",
                 () => addQuestion()
@@ -2364,17 +2357,16 @@ document.addEventListener(
 );
 
 
-/* ==========================================================
-   GLOBAL FUNCTIONS
-   Required because some HTML buttons use onclick=""
-   ========================================================== */
 
-window.showPage = showPage;
-window.addQuestion = addQuestion;
-window.editRoom = editRoom;
-window.deleteRoom = deleteRoom;
-window.publishRoom = publishRoom;
-window.archiveRoom = archiveRoom;
-window.prepareCreateRoom = prepareCreateRoom;
-window.saveRoom = saveRoom;
-window.displayResults = displayResults;
+// Delegated handlers also support dynamically rendered room cards and retry buttons.
+document.addEventListener("click", event => {
+    const navigation = event.target.closest("[data-page]");
+    if (navigation) { event.preventDefault(); showPage(navigation.dataset.page); return; }
+    const button = event.target.closest("[data-room-action]");
+    if (!button) return;
+    const actions = { archiveRoom, publishRoom, editRoom, deleteRoom, displayResults };
+    if (Object.hasOwn(actions, button.dataset.roomAction)) {
+        event.preventDefault();
+        actions[button.dataset.roomAction](button.dataset.roomId);
+    }
+});

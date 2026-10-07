@@ -12,7 +12,6 @@ test('production dependency tree excludes mongoose and sift', () => {
 test('native driver API regression suite', {}, async t => {
   const database = require('../db/database');
   process.env.MONGO_DB_NAME = `fedescape_test_${Date.now()}_${process.pid}`;
-  process.env.JWT_SECRET = 'isolated-test-secret-not-for-production';
   process.env.NODE_ENV = 'test';
   process.env.EMAIL_HOST = 'localhost';
   process.env.EMAIL_PORT = '25';
@@ -45,10 +44,21 @@ test('native driver API regression suite', {}, async t => {
     nodemailer.createTransport = originalTransport;
   });
   const base = `http://127.0.0.1:${server.address().port}/api`;
-  async function request(method,url,body,token,status=200) {
-    const response = await fetch(base+url,{method,headers:{'Content-Type':'application/json',...(token ? {Authorization:`Bearer ${token}`} : {})},body:body === undefined ? undefined : JSON.stringify(body)});
+  async function request(method,url,body,session,status=200) {
+    session = session || {};
+    if (!['GET','HEAD'].includes(method) && !session.csrf) {
+      const bootstrap = await fetch(base+'/auth/csrf');
+      session.cookie = bootstrap.headers.get('set-cookie').split(';')[0];
+      session.csrf = (await bootstrap.json()).csrfToken;
+    }
+    const response = await fetch(base+url,{method,headers:{'Content-Type':'application/json',
+      ...(session.cookie ? {Cookie:session.cookie} : {}), ...(session.csrf ? {'X-CSRF-Token':session.csrf} : {})},
+      body:body === undefined ? undefined : JSON.stringify(body)});
     const data = await response.json();
     assert.equal(response.status,status,`${method} ${url}: ${JSON.stringify(data)}`);
+    if (response.headers.get('set-cookie')) session.cookie=response.headers.get('set-cookie').split(';')[0];
+    if (data.csrfToken) session.csrf=data.csrfToken;
+    data.session = session; // Test cookie jar only, never returned by production API.
     return data;
   }
   async function register(email,role) {
@@ -71,57 +81,57 @@ test('native driver API regression suite', {}, async t => {
   });
   await t.test('profile saves preserve hidden password and verification fields',async () => {
     const before = await User.collection().findOne({email:'student@example.invalid'});
-    const res = await request('PATCH','/auth/profile',{name:'Updated Student',preferences:{theme:'dark'}},student.token);
+    const res = await request('PATCH','/auth/profile',{name:'Updated Student',preferences:{theme:'dark'}},student.session);
     assert.equal(res.user.preferences.theme,'dark');
     for(const key of User.hidden) assert(!Object.hasOwn(res.user,key));
     const after = await User.collection().findOne({_id:before._id});
     assert.equal(before.password,after.password);
     assert.equal(after.emailVerified,true);
     await request('POST','/auth/login',{email:'student@example.invalid',password:'Test-pass-123'});
-    await request('PATCH','/auth/change-password',{currentPassword:'Test-pass-123',newPassword:'Changed-pass-123'},student.token);
-    await request('POST','/auth/login',{email:'student@example.invalid',password:'Changed-pass-123'});
+    await request('PATCH','/auth/change-password',{currentPassword:'Test-pass-123',newPassword:'Changed-pass-123'},student.session);
+    student = await request('POST','/auth/login',{email:'student@example.invalid',password:'Changed-pass-123'});
   });
   await t.test('room validation, question IDs, publish and educator isolation',async () => {
-    const res=await request('POST','/rooms',{name:'Migration room',description:'Test',time:20,questions:[{questionText:'One?',correctAnswer:'yes',points:10},{questionText:'Two?',questionType:'true-false',correctAnswer:'true',points:20}]},educator.token,201);
+    const res=await request('POST','/rooms',{name:'Migration room',description:'Test',time:20,questions:[{questionText:'One?',correctAnswer:'yes',points:10},{questionText:'Two?',questionType:'true-false',correctAnswer:'true',points:20}]},educator.session,201);
     room=res.room;
     assert.match(room.questions[0]._id,/^[a-f\d]{24}$/);
     assert.equal(room.questions[0].hint,'');
-    await request('GET',`/rooms/${room._id}`,undefined,otherEducator.token,403);
-    await request('PATCH',`/rooms/${room._id}`,{name:'Forbidden'},otherEducator.token,403);
-    await request('PATCH',`/rooms/${room._id}`,{time:0},educator.token,400);
-    await request('PATCH',`/rooms/${room._id}/publish`,{},educator.token);
+    await request('GET',`/rooms/${room._id}`,undefined,otherEducator.session,403);
+    await request('PATCH',`/rooms/${room._id}`,{name:'Forbidden'},otherEducator.session,403);
+    await request('PATCH',`/rooms/${room._id}`,{time:0},educator.session,400);
+    await request('PATCH',`/rooms/${room._id}/publish`,{},educator.session);
     const list=await request('GET','/rooms');
     assert.equal(list.rooms[0].educator.name,'Test Person');
     assert(!Object.hasOwn(list.rooms[0].questions[0],'correctAnswer'));
-    const mine=await request('GET','/rooms/educator/my-rooms',undefined,otherEducator.token);
+    const mine=await request('GET','/rooms/educator/my-rooms',undefined,otherEducator.session);
     assert.equal(mine.count,0);
   });
   await t.test('attempt resume, answer scoring, duplicate protection and completion',async () => {
-    attempt=(await request('POST',`/attempts/start/${room._id}`,{},student.token,201)).attempt;
-    const resumed=(await request('POST',`/attempts/start/${room._id}`,{},student.token)).attempt;
+    attempt=(await request('POST',`/attempts/start/${room._id}`,{},student.session,201)).attempt;
+    const resumed=(await request('POST',`/attempts/start/${room._id}`,{},student.session)).attempt;
     assert.equal(resumed._id,attempt._id);
-    await request('GET',`/attempts/${attempt._id}`,undefined,otherStudent.token,403);
+    await request('GET',`/attempts/${attempt._id}`,undefined,otherStudent.session,403);
     const answer={questionId:room.questions[0]._id,answer:' YES ',hintUsed:true};
-    const result=await request('PATCH',`/attempts/${attempt._id}/answer`,answer,student.token);
+    const result=await request('PATCH',`/attempts/${attempt._id}/answer`,answer,student.session);
     assert.equal(result.result.score,10);assert.equal(result.result.progressPercentage,50);
-    await request('PATCH',`/attempts/${attempt._id}/answer`,answer,student.token,409);
-    await request('PATCH',`/attempts/${attempt._id}/answer`,{questionId:room.questions[1]._id,answer:'true'},student.token);
-    await request('PATCH',`/attempts/${attempt._id}/complete`,{},student.token);
+    await request('PATCH',`/attempts/${attempt._id}/answer`,answer,student.session,409);
+    await request('PATCH',`/attempts/${attempt._id}/answer`,{questionId:room.questions[1]._id,answer:'true'},student.session);
+    await request('PATCH',`/attempts/${attempt._id}/complete`,{},student.session);
     const stored=await Attempt.findById(attempt._id);
     assert.equal(stored.score,30);assert.equal(stored.scorePercentage,100);assert.equal(stored.progressPercentage,100);
     assert.equal(stored.hintsUsed,1);assert.equal(stored.leaderboardEligible,true);assert(stored.completedAt instanceof Date);
   });
   await t.test('results, reference joins, leaderboard and room access checks',async () => {
-    const results=await request('GET','/attempts/my-results',undefined,student.token);
+    const results=await request('GET','/attempts/my-results',undefined,student.session);
     assert.equal(results.results[0].room.name,'Migration room');
-    const other=await request('GET','/attempts/my-results',undefined,otherStudent.token);assert.equal(other.count,0);
-    await request('GET',`/attempts/room/${room._id}/results`,undefined,educator.token);
-    await request('GET',`/attempts/room/${room._id}/results`,undefined,otherEducator.token,403);
-    const board=await request('GET',`/attempts/room/${room._id}/leaderboard`,undefined,student.token);
+    const other=await request('GET','/attempts/my-results',undefined,otherStudent.session);assert.equal(other.count,0);
+    await request('GET',`/attempts/room/${room._id}/results`,undefined,educator.session);
+    await request('GET',`/attempts/room/${room._id}/results`,undefined,otherEducator.session,403);
+    const board=await request('GET',`/attempts/room/${room._id}/leaderboard`,undefined,student.session);
     assert(board.success);
-    await request('PATCH',`/rooms/${room._id}/archive`,{},educator.token);
-    await request('POST',`/attempts/start/${room._id}`,{},student.token,404);
-    await request('DELETE',`/rooms/${room._id}`,undefined,educator.token);
+    await request('PATCH',`/rooms/${room._id}/archive`,{},educator.session);
+    await request('POST',`/attempts/start/${room._id}`,{},student.session,404);
+    await request('DELETE',`/rooms/${room._id}`,undefined,educator.session);
     assert(await Attempt.findById(attempt._id));
   });
   await t.test('date casting for expiring tokens and validation are retained',async () => {
