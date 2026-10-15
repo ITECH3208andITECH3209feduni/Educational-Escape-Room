@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const { lookup } = require("node:dns").promises;
 
 // ======================================================
 // CREATE EMAIL TRANSPORTER
@@ -6,7 +7,7 @@ const nodemailer = require("nodemailer");
 
 const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
 
-const createTransporter = () => {
+const createTransporter = async () => {
   const host = process.env.EMAIL_HOST;
   const port = Number(process.env.EMAIL_PORT);
   const secure = process.env.EMAIL_SECURE === "true";
@@ -26,6 +27,15 @@ const createTransporter = () => {
   }
   const options = { host, port, secure, ignoreTLS, connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 30000 };
   if (user && pass) options.auth = { user, pass };
+  // Gmail lookup can stall in Nodemailer's resolver on this Windows network.
+  // Use the OS resolver, resolving afresh rather than pinning a Gmail address.
+  // Preserve the hostname for SNI and normal TLS certificate validation.
+  if (host.toLowerCase() === "smtp.gmail.com") {
+    const { address } = await lookup(host, { family: 4 });
+    options.host = address;
+    options.tls = { servername: host };
+    options.requireTLS = true;
+  }
   // Keep Nodemailer's normal TLS certificate validation for TLS connections.
   return nodemailer.createTransport(options);
 };
@@ -39,7 +49,7 @@ const sendVerificationEmail = async (
   name,
   verificationToken
 ) => {
-  const transporter = createTransporter();
+  const transporter = await createTransporter();
 
   const clientUrl =
     (process.env.CLIENT_URL || `http://localhost:${process.env.PORT || 5000}${(process.env.APP_BASE_PATH || "").replace(/\/+$/, "")}`).replace(/\/+$/, "");
@@ -135,7 +145,7 @@ function passwordResetUrl(token) {
 }
 async function sendPasswordResetEmail(email, name, token) {
   const url = passwordResetUrl(token);
-  return createTransporter().sendMail({
+  return (await createTransporter()).sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER, to: email,
     subject: "Reset your FEDEscape password",
     text: `Hello ${name},\n\nYou requested a new FEDEscape password. Open this link to choose one:\n\n${url}\n\nThis link expires in 15 minutes and can be used once. A newer reset email replaces earlier links. If you did not request this, ignore this email; your password has not changed.\n\nFEDEscape Team`,
@@ -143,7 +153,7 @@ async function sendPasswordResetEmail(email, name, token) {
   });
 }
 async function sendPasswordChangedEmail(email, name) {
-  return createTransporter().sendMail({
+  return (await createTransporter()).sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER, to: email,
     subject: "Your FEDEscape password was changed",
     text: `Hello ${name},\n\nYour FEDEscape password has been reset. All existing sessions have been signed out.\n\nIf you did not make this change, reset your password again through FEDEscape and contact your project administrator.\n\nFEDEscape Team`,
@@ -151,3 +161,4 @@ async function sendPasswordChangedEmail(email, name) {
   });
 }
 module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendPasswordChangedEmail, passwordResetUrl };
+
